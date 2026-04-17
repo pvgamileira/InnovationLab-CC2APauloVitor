@@ -7,6 +7,7 @@ import {
   BookOpen, Plus, Clock, ListTodo, CheckCircle2,
   Circle, X, Search, Calendar, FolderOpen, AlertCircle, Play, BarChart3, Download
 } from 'lucide-react';
+import GamificationWidget from '@/components/GamificationWidget';
 
 export default function DashboardPage() {
   const [session, setSession] = useState(null);
@@ -238,6 +239,11 @@ export default function DashboardPage() {
           </button>
         </div>
       </header>
+
+      {/* Gamification Widget */}
+      <div className="mb-10">
+        <GamificationWidget completedTasks={completedTasks} />
+      </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
