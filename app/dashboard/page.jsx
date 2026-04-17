@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip } from 'recharts';
 import {
   BookOpen, Plus, Clock, ListTodo, CheckCircle2,
   Circle, X, Search, Calendar, FolderOpen, AlertCircle, Play, BarChart3, Download
 } from 'lucide-react';
-import GamificationWidget from '@/components/GamificationWidget';
+import XpHudBar from '@/components/XpHudBar';
+import KanbanBoard from '@/components/KanbanBoard';
 
 export default function DashboardPage() {
   const [session, setSession] = useState(null);
@@ -16,11 +17,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Modals state
   const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
-  // Form states
   const [newSubject, setNewSubject] = useState({ name: '', professor: '', workload: 0 });
   const [newTask, setNewTask] = useState({ title: '', subject_id: '', due_date: '' });
   const [submitting, setSubmitting] = useState(false);
@@ -102,7 +101,7 @@ export default function DashboardPage() {
           subject_id: newTask.subject_id,
           title: newTask.title,
           due_date: newTask.due_date || null,
-          status: 'pending' // Forçando explicitamente
+          status: 'pending'
         }
       ]);
       if (error) throw error;
@@ -117,12 +116,21 @@ export default function DashboardPage() {
     }
   };
 
-  const toggleTaskStatus = async (taskId, currentStatus) => {
-    try {
-      const newStatus = currentStatus === 'completed' ? 'pending' : 'completed';
+  const STATUS_ORDER = ['pending', 'in_progress', 'completed'];
 
-      // Update local state instântaneamente para melhor unx
-      setTasks(tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
+  const moveTask = async (taskId, direction) => {
+    try {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+      const currentIndex = STATUS_ORDER.indexOf(task.status);
+      const validIndex = currentIndex === -1 ? 0 : currentIndex;
+      const newIndex = direction === 'forward'
+        ? Math.min(validIndex + 1, STATUS_ORDER.length - 1)
+        : Math.max(validIndex - 1, 0);
+      const newStatus = STATUS_ORDER[newIndex];
+      if (newStatus === task.status) return;
+
+      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
 
       const { error } = await supabase
         .from('academic_tasks')
@@ -132,9 +140,9 @@ export default function DashboardPage() {
       if (error) throw error;
       await refetchData(session.user.id);
     } catch (err) {
-      alert(`Erro ao atualizar: ${err.message}`);
+      alert(`Erro ao mover tarefa: ${err.message}`);
     }
-  }
+  };
 
   const handleGenerateReport = async () => {
     try {
@@ -194,17 +202,15 @@ export default function DashboardPage() {
     );
   }
 
-  // Estatísticas Dinâmicas
   const totalWorkload = subjects.reduce((sum, subject) => sum + subject.workload, 0);
   const pendingTasks = tasks.filter(t => t.status === 'pending').length;
   const completedTasks = tasks.filter(t => t.status === 'completed').length;
 
-  // Recharts Payload
   const chartData = [
     { name: 'Pendentes', value: pendingTasks },
     { name: 'Concluídas', value: completedTasks }
   ];
-  const CHART_COLORS = ['#1e293b', '#3a86ff']; // Slate 800 (Pending), Metallic Blue (Completed)
+  const CHART_COLORS = ['#1e293b', '#3a86ff'];
 
   return (
     <div className="max-w-[1400px] mx-auto px-6 lg:px-12 pt-10 animate-in fade-in duration-700">
@@ -217,6 +223,7 @@ export default function DashboardPage() {
           <p className="text-gray-400 font-medium tracking-wide">Acompanhe seu desempenho metodicamente.</p>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-4">
+          <XpHudBar completedTasks={completedTasks} />
           <button
             onClick={handleGenerateReport}
             disabled={isGeneratingReport}
@@ -240,12 +247,6 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* Gamification Widget */}
-      <div className="mb-10">
-        <GamificationWidget completedTasks={completedTasks} />
-      </div>
-
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
         <div className="group relative bg-[#0a0c14]/80 backdrop-blur-xl border border-white/5 rounded-[2rem] p-8 overflow-hidden hover:border-[#3a86ff]/40 transition-all duration-300">
           <div className="absolute top-0 right-0 p-8 opacity-20 group-hover:opacity-40 transition-opacity">
@@ -282,8 +283,6 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-
-        {/* Active Subjects Area (Takes 7 cols) */}
         <div className="lg:col-span-7">
           <div className="flex items-center justify-between mb-8 pb-3 border-b border-white/5">
             <h2 className="text-xl font-bold flex items-center gap-3">
@@ -329,12 +328,8 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Analytics & Tasks Area (Takes 5 cols) */}
         <div className="lg:col-span-5 space-y-10">
-
-          {/* Data Visualization (Recharts) */}
           <div className="bg-[#05070e]/80 backdrop-blur-2xl border border-white/5 rounded-[2rem] p-6 relative overflow-hidden">
-
             <h2 className="text-lg font-bold flex items-center gap-3 mb-6 pb-3 border-b border-white/5 text-gray-200">
               <BarChart3 className="w-5 h-5 text-[#3a86ff]" />
               Progresso Analítico
@@ -346,7 +341,6 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div className="h-[240px] w-full flex justify-center items-center relative">
-                {/* Passamos o tamanho direto pro PieChart e matamos o ResponsiveContainer */}
                 <PieChart width={250} height={240}>
                   <Pie
                     data={chartData}
@@ -368,7 +362,6 @@ export default function DashboardPage() {
                   />
                 </PieChart>
 
-                {/* Centro do Gráfico (Os números no meio da pizza) */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                   <span className="text-3xl font-extrabold text-white">{completedTasks}</span>
                   <span className="text-[10px] uppercase font-bold text-[#3a86ff] tracking-widest">Feitas</span>
@@ -376,7 +369,6 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Legenda Customizada */}
             {tasks.length > 0 && (
               <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-white/5">
                 <div className="flex items-center gap-2">
@@ -390,79 +382,26 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
-
-          {/* Task Backlog */}
-          <div className="bg-[#05070e]/80 backdrop-blur-2xl border border-white/5 rounded-[2rem] p-6 min-h-[300px]">
-            <h2 className="text-lg font-bold flex items-center justify-between mb-6 pb-3 border-b border-white/5 text-gray-200">
-              <div className="flex items-center gap-3">
-                <ListTodo className="w-5 h-5 text-indigo-400" />
-                Backlog de Tarefas
-              </div>
-              <span className="bg-[#3a86ff]/20 text-[#3a86ff] text-xs font-bold px-3 py-1 rounded-full border border-[#3a86ff]/30">{pendingTasks} ativas</span>
-            </h2>
-
-            {tasks.length === 0 ? (
-              <div className="h-[150px] flex flex-col justify-center items-center text-center">
-                <CheckCircle2 className="w-10 h-10 text-gray-700 mb-3" />
-                <p className="text-sm text-gray-500 font-medium">Cronograma limpo.</p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {tasks.map(task => (
-                  <div key={task.id} className="bg-white/5 border border-white/5 hover:border-[#3a86ff]/40 rounded-2xl p-4 transition-all group flex gap-4 hover:bg-[#3a86ff]/5">
-                    <div className="mt-0.5">
-                      <button onClick={() => toggleTaskStatus(task.id, task.status)} className="focus:outline-none hover:scale-110 transition-transform">
-                        {task.status === 'completed' ? (
-                          <CheckCircle2 className="w-6 h-6 text-[#3a86ff] drop-shadow-[0_0_8px_rgba(58,134,255,0.6)]" />
-                        ) : (
-                          <Circle className="w-6 h-6 text-gray-500 group-hover:text-[#3a86ff]/50 transition-colors" />
-                        )}
-                      </button>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className={`text-sm font-bold mb-2 truncate ${task.status === 'completed' ? 'text-gray-600 line-through' : 'text-gray-100 group-hover:text-white'} transition-colors`}>{task.title}</h4>
-                      <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-wider">
-                        <span className="px-2 py-1 bg-black/50 text-[#3a86ff] rounded-[8px] border border-[#3a86ff]/20 truncate max-w-[120px]">{task.subjects?.name || 'Geral'}</span>
-                        {!task.due_date ? (
-                          <span className="text-gray-400 flex items-center gap-1 bg-black/50 px-2 py-1 rounded-[8px] border border-gray-500/20">
-                            Prazo Indeterminado
-                          </span>
-                        ) : (
-                          <span className="text-orange-300/80 flex items-center gap-1 bg-black/50 px-2 py-1 rounded-[8px] border border-orange-500/10">
-                            <Calendar className="w-3 h-3" />
-                            {new Date(task.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
-                          </span>
-                        )}
-                        {task.due_date && new Date(task.due_date) < new Date() && task.status !== 'completed' && (
-                          <span className="text-red-400 flex items-center gap-1 bg-red-900/30 px-2 py-1 rounded-[8px] border border-red-500/30">
-                            <AlertCircle className="w-3 h-3" />
-                            Atrasada
-                          </span>
-                        )}
-                        {task.due_date && (new Date(task.due_date) - new Date() <= 48 * 60 * 60 * 1000) && new Date(task.due_date) > new Date() && task.status !== 'completed' && (
-                          <span className="text-yellow-400 flex items-center gap-1 bg-yellow-900/30 px-2 py-1 rounded-[8px] border border-yellow-500/30">
-                            <Clock className="w-3 h-3" />
-                            Próxima
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <button onClick={() => setIsTaskModalOpen(true)} className="mt-4 w-full py-3 rounded-xl border border-dashed border-white/10 text-gray-500 font-bold tracking-wide hover:text-white hover:border-[#3a86ff]/50 hover:bg-[#3a86ff]/10 transition-all text-xs uppercase">
-              + Adicionar Demanda
-            </button>
-          </div>
-
         </div>
       </div>
 
-      {/* --- MODALS --- */}
+      <div className="mt-12">
+        <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/5">
+          <h2 className="text-xl font-bold flex items-center gap-3">
+            <ListTodo className="w-5 h-5 text-[#3a86ff]" />
+            Quadro de Tarefas
+          </h2>
+          <span className="text-xs text-gray-500 font-medium">{tasks.length} tarefa{tasks.length !== 1 ? 's' : ''} no total</span>
+        </div>
+        <KanbanBoard tasks={tasks} moveTask={moveTask} />
+        <button
+          onClick={() => setIsTaskModalOpen(true)}
+          className="mt-5 w-full py-3 rounded-xl border border-dashed border-white/10 text-gray-500 font-bold tracking-wide hover:text-white hover:border-[#3a86ff]/50 hover:bg-[#3a86ff]/10 transition-all text-xs uppercase"
+        >
+          + Adicionar Demanda
+        </button>
+      </div>
 
-      {/* Subject Creation Modal */}
       {isSubjectModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/90 backdrop-blur-md animate-in fade-in" onClick={() => setIsSubjectModalOpen(false)}></div>
@@ -497,7 +436,6 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Task Creation Modal */}
       {isTaskModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/90 backdrop-blur-md animate-in fade-in" onClick={() => setIsTaskModalOpen(false)}></div>
