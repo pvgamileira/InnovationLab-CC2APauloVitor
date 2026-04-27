@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
-  BarChart3, TrendingUp, Target, Clock, BrainCircuit, CheckCircle2, AlertCircle
+  BarChart3, TrendingUp, Target, Clock, BrainCircuit, CheckCircle2, AlertCircle, Sparkles
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -20,6 +20,10 @@ export default function EstatisticasPage() {
     subjectData: [],
     workloadData: []
   });
+
+  const [insightsData, setInsightsData] = useState(null);
+  const [isLoadingInsights, setIsLoadingInsights] = useState(true);
+  const [insightsError, setInsightsError] = useState(null);
 
   const COLORS = ['#3a86ff', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899'];
 
@@ -84,6 +88,39 @@ export default function EstatisticasPage() {
     fetchStats();
   }, []);
 
+  useEffect(() => {
+    async function fetchInsights() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          setInsightsError('No session');
+          setIsLoadingInsights(false);
+          return;
+        }
+
+        const response = await fetch('/api/gemini-insights', {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch insights');
+        }
+
+        const data = await response.json();
+        setInsightsData(data);
+      } catch (error) {
+        console.error("Erro ao buscar insights da IA:", error);
+        setInsightsError(error.message);
+      } finally {
+        setIsLoadingInsights(false);
+      }
+    }
+
+    fetchInsights();
+  }, []);
+
   if (loading) {
     return (
       <div className="flex h-full flex-col items-center justify-center p-8">
@@ -104,6 +141,37 @@ export default function EstatisticasPage() {
           Análise preditiva do seu desempenho acadêmico.
         </p>
       </header>
+
+      {/* Smart AI Insights Panel */}
+      <div className="mb-10 bg-[#02040a]/80 backdrop-blur-xl border border-[#3a86ff]/30 rounded-3xl p-6 lg:p-8 relative overflow-hidden shadow-2xl shadow-[#3a86ff]/10">
+        <div className="flex items-center gap-3 mb-6">
+          <Sparkles className="w-6 h-6 text-[#3a86ff]" />
+          <h2 className="text-2xl font-bold text-gray-100 tracking-tight">Insights Inteligentes</h2>
+        </div>
+        
+        {isLoadingInsights ? (
+          <div className="space-y-4 animate-pulse">
+            <div className="h-4 bg-[#3a86ff]/20 rounded w-3/4"></div>
+            <div className="h-4 bg-[#3a86ff]/20 rounded w-full"></div>
+            <div className="h-4 bg-[#3a86ff]/20 rounded w-5/6"></div>
+          </div>
+        ) : insightsError ? (
+          <div className="text-gray-400 text-sm">Não foi possível carregar os insights no momento.</div>
+        ) : insightsData && insightsData.insights ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {insightsData.insights.map((insight, idx) => (
+              <div key={idx} className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition-colors">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#3a86ff]/20 flex items-center justify-center text-[#3a86ff] font-bold text-sm">
+                    {idx + 1}
+                  </div>
+                  <p className="text-gray-300 text-sm leading-relaxed">{insight}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
 
       {/* Top Metric Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">

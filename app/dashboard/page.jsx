@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation'; // <-- useRouter adicionado
 import { supabase } from '@/lib/supabase';
 import { PieChart, Pie, Cell, Tooltip } from 'recharts';
 import {
@@ -11,6 +12,7 @@ import XpHudBar from '@/components/XpHudBar';
 import KanbanBoard from '@/components/KanbanBoard';
 
 export default function DashboardPage() {
+  const router = useRouter(); // <-- Roteador instanciado
   const [session, setSession] = useState(null);
   const [subjects, setSubjects] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -25,20 +27,26 @@ export default function DashboardPage() {
   const [submitting, setSubmitting] = useState(false);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 
+  // CORREÇÃO CRÍTICA DO USEEFFECT AQUI
   useEffect(() => {
+    let isMounted = true;
+
     async function initSessionAndFetchData() {
       try {
         setLoading(true);
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
 
-        if (!session) {
-          window.location.href = '/auth';
+        // Se não tiver sessão E não estiver no meio de um login do Google (hash na URL), expulsa.
+        if (!session && !window.location.hash.includes('access_token')) {
+          router.push('/auth');
           return;
         }
 
-        setSession(session);
-        await refetchData(session.user.id);
+        if (session) {
+          setSession(session);
+          await refetchData(session.user.id);
+        }
       } catch (err) {
         setError(err.message);
         setLoading(false);
@@ -46,7 +54,22 @@ export default function DashboardPage() {
     }
 
     initSessionAndFetchData();
-  }, []);
+
+    // Escuta em background pra pegar a sessão assim que o Google processar
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      if (event === 'SIGNED_IN' && newSession && isMounted) {
+        setSession(newSession);
+        await refetchData(newSession.user.id);
+      } else if (event === 'SIGNED_OUT' && isMounted) {
+        router.push('/auth');
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription?.unsubscribe();
+    };
+  }, [router]);
 
   const refetchData = async (userId) => {
     try {

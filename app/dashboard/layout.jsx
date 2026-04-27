@@ -1,6 +1,6 @@
 'use client';
-
-import { usePathname } from 'next/navigation';
+import GlobalMentor from '@/components/GlobalMentor';
+import { usePathname, useRouter } from 'next/navigation'; // <-- useRouter adicionado
 import { supabase } from '@/lib/supabase';
 // Importação limpa, sem BarChart3 duplicado!
 import {
@@ -10,10 +10,11 @@ import {
 
 export default function DashboardLayout({ children }) {
   const pathname = usePathname();
+  const router = useRouter(); // <-- Roteador instanciado
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    window.location.href = '/auth';
+    router.push('/auth'); // <-- Correção do redirect
   };
 
   const menuGroups = [
@@ -117,6 +118,7 @@ export default function DashboardLayout({ children }) {
           <span className="text-[9px] font-bold tracking-wider uppercase">Conta</span>
         </a>
       </nav>
+      <GlobalMentor />
     </div>
   );
 }
