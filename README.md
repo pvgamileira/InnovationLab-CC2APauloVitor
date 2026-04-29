@@ -1,36 +1,34 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🎓 EduTrack AI
 
-## Getting Started
+![Banner EduTrack AI](https://via.placeholder.com/1200x300/02040a/3a86ff?text=EduTrack+AI+-+Inteligencia+Academica)
 
-First, run the development server:
+**O ecossistema definitivo para estudantes organizarem tarefas, notas e desempenho com mentoria proativa.**
 
+O EduTrack AI vai muito além de um simples gerenciador de tarefas. Desenvolvido para lidar com a carga pesada do meio acadêmico, ele utiliza Inteligência Artificial Generativa para analisar prazos, reescrever anotações brutas e alertar sobre riscos de burnout antes que eles aconteçam.
+
+## ✨ Principais Funcionalidades
+
+- 🧠 **Mentor IA Contextual:** Dicas personalizadas de carreira e estudo baseadas no seu curso, turno e carga de trabalho.
+- 📋 **Kanban Board:** Gerenciamento visual de tarefas acadêmicas com Drag-and-Drop.
+- 📓 **Caderno Copiloto:** Transforme rascunhos de aulas em resumos estruturados (Markdown) e Flashcards gerados por IA.
+- 📊 **Radar de Burnout:** Análise preditiva baseada no cruzamento de dados de entregas pendentes vs. rotina do aluno.
+- 🛡️ **Privacidade em 1º Lugar:** Conformidade com a LGPD e Row Level Security (RLS) para proteção de dados sensíveis.
+
+## 🛠️ Tecnologias Utilizadas
+
+Este projeto foi construído com as tecnologias mais modernas do mercado:
+
+- **Framework:** [Next.js 14](https://nextjs.org/) (App Router)
+- **Estilização:** [Tailwind CSS](https://tailwindcss.com/) & Glassmorphism
+- **Banco de Dados & Autenticação:** [Supabase](https://supabase.com/) (PostgreSQL)
+- **Inteligência Artificial:** [Google Gemini 2.5 Flash API](https://ai.google.dev/)
+- **Componentes:** `lucide-react`, `recharts`, `react-markdown`
+
+## 🚀 Como rodar o projeto localmente
+
+Siga as instruções abaixo para ter o ambiente rodando na sua máquina.
+
+### 1. Clonar o repositório
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+git clone [https://github.com/SEU_USUARIO/edutrack-ai.git](https://github.com/SEU_USUARIO/edutrack-ai.git)
+cd edutrack-ai
