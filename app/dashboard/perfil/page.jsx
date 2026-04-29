@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
     User, Briefcase, GraduationCap, Shield,
-    Trophy, Target, Zap, BookOpen, Edit3, X, Loader2, Download
+    Trophy, Target, Zap, BookOpen, Edit3, X, Loader2, Download, Clock
 } from 'lucide-react';
 
 export default function PerfilPage() {
@@ -14,9 +14,10 @@ export default function PerfilPage() {
 
     const [profileMeta, setProfileMeta] = useState({
         name: 'Estudante',
-        role: 'Defina seu cargo',
-        education: 'Defina seu curso',
-        university: 'Defina sua instituição'
+        occupation: 'Só Estudo',
+        course: 'Sem Curso',
+        institution: 'Sem Instituição',
+        study_shift: 'Manhã'
     });
 
     const [stats, setStats] = useState({
@@ -47,17 +48,17 @@ export default function PerfilPage() {
             }
             setSession(session);
 
-            if (session.user.user_metadata) {
-                const meta = session.user.user_metadata;
-                const currentMeta = {
-                    name: meta.name || 'Estudante',
-                    role: meta.role || 'Defina seu cargo',
-                    education: meta.education || 'Defina seu curso',
-                    university: meta.university || 'Defina sua instituição'
-                };
-                setProfileMeta(currentMeta);
-                setEditForm(currentMeta);
-            }
+            const { data: profile } = await supabase.from('user_profiles').select('*').eq('user_id', session.user.id).single();
+            
+            const currentMeta = {
+                name: profile?.name || session.user.user_metadata?.name || 'Estudante',
+                occupation: profile?.occupation || 'Só Estudo',
+                course: profile?.course || 'Sem Curso',
+                institution: profile?.institution || 'Sem Instituição',
+                study_shift: profile?.study_shift || 'Manhã'
+            };
+            setProfileMeta(currentMeta);
+            setEditForm(currentMeta);
 
             const [subjectsRes, tasksRes] = await Promise.all([
                 supabase.from('subjects').select('*').eq('user_id', session.user.id),
@@ -135,14 +136,17 @@ export default function PerfilPage() {
         e.preventDefault();
         setIsSaving(true);
         try {
-            const { error } = await supabase.auth.updateUser({
-                data: {
+            const { error } = await supabase.from('user_profiles').upsert([
+                {
+                    user_id: session.user.id,
                     name: editForm.name,
-                    role: editForm.role,
-                    education: editForm.education,
-                    university: editForm.university
+                    occupation: editForm.occupation,
+                    course: editForm.course,
+                    institution: editForm.institution,
+                    study_shift: editForm.study_shift,
+                    updated_at: new Date().toISOString()
                 }
-            });
+            ]);
             if (error) throw error;
             setProfileMeta(editForm);
             setIsEditModalOpen(false);
@@ -196,8 +200,9 @@ export default function PerfilPage() {
                             <h2 className="text-2xl font-black text-white tracking-tight mb-2">{profileMeta.name}</h2>
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#3a86ff]/10 border border-[#3a86ff]/20 text-[#3a86ff] text-xs font-bold uppercase tracking-widest mb-6"><Shield className="w-3 h-3" />Membro</div>
                             <div className="space-y-4 text-left mt-4 border-t border-white/5 pt-6">
-                                <div className="flex items-center gap-3 text-gray-400"><Briefcase className="w-5 h-5 text-gray-500" /><span className="text-sm font-medium">{profileMeta.role}</span></div>
-                                <div className="flex items-center gap-3 text-gray-400"><GraduationCap className="w-5 h-5 text-gray-500" /><span className="text-sm font-medium leading-snug">{profileMeta.education}<br />{profileMeta.university}</span></div>
+                                <div className="flex items-center gap-3 text-gray-400"><Briefcase className="w-5 h-5 text-gray-500" /><span className="text-sm font-medium">{profileMeta.occupation}</span></div>
+                                <div className="flex items-center gap-3 text-gray-400"><GraduationCap className="w-5 h-5 text-gray-500" /><span className="text-sm font-medium leading-snug">{profileMeta.course}<br />{profileMeta.institution}</span></div>
+                                <div className="flex items-center gap-3 text-gray-400"><Clock className="w-5 h-5 text-gray-500" /><span className="text-sm font-medium">{profileMeta.study_shift}</span></div>
                             </div>
                         </div>
                     </div>
@@ -242,9 +247,22 @@ export default function PerfilPage() {
                         <h3 className="text-2xl font-extrabold text-white mb-6">Atualizar Perfil</h3>
                         <form onSubmit={handleSaveProfile} className="space-y-5">
                             <input required type="text" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white outline-none" placeholder="Nome" />
-                            <input required type="text" value={editForm.role} onChange={(e) => setEditForm({ ...editForm, role: e.target.value })} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white outline-none" placeholder="Cargo" />
-                            <input required type="text" value={editForm.education} onChange={(e) => setEditForm({ ...editForm, education: e.target.value })} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white outline-none" placeholder="Curso" />
-                            <input required type="text" value={editForm.university} onChange={(e) => setEditForm({ ...editForm, university: e.target.value })} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white outline-none" placeholder="Instituição" />
+                            <input required type="text" value={editForm.course} onChange={(e) => setEditForm({ ...editForm, course: e.target.value })} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white outline-none" placeholder="Curso" />
+                            <input required type="text" value={editForm.institution} onChange={(e) => setEditForm({ ...editForm, institution: e.target.value })} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white outline-none" placeholder="Instituição" />
+                            <select required value={editForm.study_shift} onChange={(e) => setEditForm({ ...editForm, study_shift: e.target.value })} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white outline-none appearance-none cursor-pointer">
+                                <option value="" disabled>Turno</option>
+                                <option value="Manhã">Manhã</option>
+                                <option value="Tarde">Tarde</option>
+                                <option value="Noite">Noite</option>
+                                <option value="Integral">Integral</option>
+                            </select>
+                            <select required value={editForm.occupation} onChange={(e) => setEditForm({ ...editForm, occupation: e.target.value })} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white outline-none appearance-none cursor-pointer">
+                                <option value="" disabled>Ocupação</option>
+                                <option value="Só Estudo">Só Estudo</option>
+                                <option value="Trabalho e Estudo">Trabalho e Estudo</option>
+                                <option value="Estágio">Estágio</option>
+                                <option value="Outro">Outro</option>
+                            </select>
                             <div className="pt-6 flex gap-4">
                                 <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-3 bg-white/5 rounded-xl text-gray-300">Cancelar</button>
                                 <button type="submit" disabled={isSaving} className="flex-[2] py-3 bg-[#3a86ff] rounded-xl text-white font-bold">{isSaving ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Salvar"}</button>

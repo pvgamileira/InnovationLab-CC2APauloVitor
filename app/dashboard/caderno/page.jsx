@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookText, Loader2, CheckCircle2, Clock, FolderOpen, AlertCircle, Sparkles, X } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 export default function CadernoPage() {
   const [session, setSession] = useState(null);
@@ -269,8 +270,21 @@ export default function CadernoPage() {
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <div className="text-gray-300 leading-relaxed whitespace-pre-wrap text-base">
-                {aiResponse}
+              <div className="text-gray-300 leading-relaxed text-base max-w-none">
+                <ReactMarkdown
+                  components={{
+                    h1: ({node, ...props}) => <h1 className="text-2xl font-bold text-white mt-6 mb-4" {...props} />,
+                    h2: ({node, ...props}) => <h2 className="text-xl font-bold text-white mt-5 mb-3" {...props} />,
+                    h3: ({node, ...props}) => <h3 className="text-lg font-bold text-white mt-4 mb-2" {...props} />,
+                    p: ({node, ...props}) => <p className="mb-4" {...props} />,
+                    ul: ({node, ...props}) => <ul className="list-disc list-inside mb-4 space-y-2" {...props} />,
+                    ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-4 space-y-2" {...props} />,
+                    li: ({node, ...props}) => <li className="text-gray-300" {...props} />,
+                    strong: ({node, ...props}) => <strong className="font-bold text-white" {...props} />,
+                  }}
+                >
+                  {aiResponse}
+                </ReactMarkdown>
               </div>
             </motion.div>
           )}

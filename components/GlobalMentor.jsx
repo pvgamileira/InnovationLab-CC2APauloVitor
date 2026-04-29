@@ -6,6 +6,7 @@ import { Sparkles, X, ChevronUp, Loader2 } from 'lucide-react';
 export default function GlobalMentor() {
     const [isOpen, setIsOpen] = useState(false);
     const [insights, setInsights] = useState([]);
+    const [profileName, setProfileName] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -30,6 +31,7 @@ export default function GlobalMentor() {
 
             const data = await res.json();
             setInsights(data.insights || []);
+            setProfileName(data.profileName || '');
         } catch (err) {
             setError(err.message);
         } finally {
@@ -57,11 +59,18 @@ export default function GlobalMentor() {
             {/* Janela de Insights (Glassmorphism) */}
             {isOpen && (
                 <div className="w-[320px] bg-[#0a0c14]/90 backdrop-blur-2xl border border-[#3a86ff]/30 rounded-2xl p-5 shadow-[0_10px_50px_rgba(0,0,0,0.5)] animate-in slide-in-from-bottom-5">
-                    <div className="flex justify-between items-center mb-4 border-b border-white/5 pb-3">
-                        <h3 className="font-bold text-white flex items-center gap-2">
-                            <Sparkles className="w-4 h-4 text-[#3a86ff]" />
-                            Mentor IA
-                        </h3>
+                    <div className="flex justify-between items-start mb-4 border-b border-white/5 pb-3">
+                        <div>
+                            <h3 className="font-bold text-white flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-[#3a86ff]" />
+                                Mentor IA
+                            </h3>
+                            {profileName && (
+                                <span className="inline-block mt-1.5 bg-[#3a86ff]/20 text-[#3a86ff] px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase">
+                                    Personalizado para {profileName.split(' ')[0]}
+                                </span>
+                            )}
+                        </div>
                         <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white">
                             <X className="w-5 h-5" />
                         </button>

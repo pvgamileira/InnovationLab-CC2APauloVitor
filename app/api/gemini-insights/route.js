@@ -23,11 +23,19 @@ export async function POST(request) {
     if (authError || !user) throw new Error('Usuário não autenticado');
 
     // 3. Puxa os dados para a IA analisar
+    const { data: profile } = await supabase.from('user_profiles').select('*').eq('user_id', user.id).single();
     const { data: tasks } = await supabase.from('academic_tasks').select('title, status').eq('user_id', user.id);
     const { data: subjects } = await supabase.from('subjects').select('name, workload').eq('user_id', user.id);
 
     const pending = tasks?.filter(t => t.status === 'pending').length || 0;
     const completed = tasks?.filter(t => t.status === 'completed').length || 0;
+    const tasksString = tasks?.map(t => `${t.title} (${t.status})`).join(', ') || 'Nenhuma tarefa';
+
+    const profileName = profile?.name || user.user_metadata?.name || 'Estudante';
+    const profileCourse = profile?.course || 'Cursos Diversos';
+    const profileInstitution = profile?.institution || 'Instituição';
+    const profileShift = profile?.study_shift || 'Indefinido';
+    const profileOccupation = profile?.occupation || 'Estudante';
 
     // 4. Trava de Segurança da Chave
     if (!process.env.GEMINI_API_KEY) {
@@ -39,9 +47,10 @@ export async function POST(request) {
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `
-      Aja como um mentor acadêmico sênior. O aluno tem ${subjects?.length || 0} disciplinas ativas.
-      Ele concluiu ${completed} tarefas e tem ${pending} pendentes.
-      Baseado nisso, forneça 3 insights estratégicos curtos (máximo 2 frases cada) em português sobre o que ele deve priorizar ou melhorar.
+      Você é o Mentor IA do EduTrack. O usuário se chama ${profileName}, estuda ${profileCourse} na ${profileInstitution} no turno ${profileShift} e trabalha como ${profileOccupation}.
+      Analise as tarefas dele: [${tasksString}] e dê 3 insights curtos e ultra-personalizados.
+      Se houver tarefas acumuladas e o usuário trabalha/estuda em turnos opostos, inclua um 'Radar de Burnout' com conselhos de saúde mental.
+      Dê dicas técnicas de TI baseadas no curso dele.
       Retorne EXATAMENTE um objeto JSON válido, sem markdown, sem formatação extra, apenas isso:
       {"insights": ["dica 1", "dica 2", "dica 3"]}
     `;
@@ -53,7 +62,7 @@ export async function POST(request) {
     text = text.replace(/```json/g, '').replace(/```/g, '').trim();
     const jsonResponse = JSON.parse(text);
 
-    return NextResponse.json(jsonResponse, { status: 200 });
+    return NextResponse.json({ insights: jsonResponse.insights, profileName }, { status: 200 });
 
   } catch (error) {
     console.error("Erro no Motor Gemini:", error);

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import XpHudBar from '@/components/XpHudBar';
 import KanbanBoard from '@/components/KanbanBoard';
+import OnboardingModal from '@/components/OnboardingModal';
 
 export default function DashboardPage() {
   const [session, setSession] = useState(null);
@@ -24,6 +25,7 @@ export default function DashboardPage() {
   const [newTask, setNewTask] = useState({ title: '', subject_id: '', due_date: '' });
   const [submitting, setSubmitting] = useState(false);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   useEffect(() => {
     async function initSessionAndFetchData() {
@@ -38,6 +40,12 @@ export default function DashboardPage() {
         }
 
         setSession(session);
+
+        const { data: profile } = await supabase.from('user_profiles').select('*').eq('user_id', session.user.id).single();
+        if (!profile) {
+          setNeedsOnboarding(true);
+        }
+
         await refetchData(session.user.id);
       } catch (err) {
         setError(err.message);
@@ -158,6 +166,7 @@ export default function DashboardPage() {
       if (session) await refetchData(session.user.id);
     }
   };
+
 
   const handleGenerateReport = async () => {
     try {
@@ -507,6 +516,11 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+      )}
+
+      {/* MODAL ONBOARDING */}
+      {needsOnboarding && (
+        <OnboardingModal onClose={() => setNeedsOnboarding(false)} session={session} />
       )}
     </div>
   );

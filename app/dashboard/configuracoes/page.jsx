@@ -11,9 +11,15 @@ export default function ConfiguracoesPage() {
     const [loading, setLoading] = useState(true);
 
     // Estados de loading de botões
-    const [isResetting, setIsResetting] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+    // Estados para redefinição de senha
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [passwordLoading, setPasswordLoading] = useState(false);
+    const [passwordError, setPasswordError] = useState(null);
+    const [passwordSuccess, setPasswordSuccess] = useState(null);
 
     useEffect(() => {
         async function getUser() {
@@ -24,28 +30,47 @@ export default function ConfiguracoesPage() {
         getUser();
     }, []);
 
-    // Envia e-mail real de redefinição via Supabase
-    const handleResetPassword = async () => {
-        if (!session?.user?.email) return;
-        setIsResetting(true);
+    const handlePasswordUpdate = async (e) => {
+        e.preventDefault();
+        setPasswordError(null);
+        setPasswordSuccess(null);
+
+        if (newPassword.length < 6) {
+            setPasswordError('A senha deve ter pelo menos 6 caracteres.');
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            setPasswordError('As senhas não coincidem.');
+            return;
+        }
+
+        setPasswordLoading(true);
         try {
-            const { error } = await supabase.auth.resetPasswordForEmail(session.user.email, {
-                redirectTo: `${window.location.origin}/auth/update-password`,
-            });
+            const { error } = await supabase.auth.updateUser({ password: newPassword });
             if (error) throw error;
-            alert('E-mail de redefinição enviado! Verifique sua caixa de entrada.');
-        } catch (error) {
-            alert(`Erro: ${error.message}`);
+            
+            setPasswordSuccess('Senha atualizada com sucesso!');
+            setNewPassword('');
+            setConfirmPassword('');
+        } catch (err) {
+            setPasswordError(`Erro: ${err.message}`);
         } finally {
-            setIsResetting(false);
+            setPasswordLoading(false);
         }
     };
 
     const handleDeleteAccount = async () => {
         setIsDeleting(true);
         try {
+            const userId = session?.user?.id;
+            if (!userId) throw new Error("Usuário não autenticado");
+
+            await supabase.from('academic_tasks').delete().eq('user_id', userId);
+            await supabase.from('subjects').delete().eq('user_id', userId);
+            await supabase.from('user_profiles').delete().eq('user_id', userId);
+
             await supabase.auth.signOut();
-            window.location.href = '/auth';
+            window.location.href = '/';
         } catch (error) {
             alert(`Erro: ${error.message}`);
         } finally {
@@ -77,26 +102,60 @@ export default function ConfiguracoesPage() {
                 <div className="lg:col-span-2 space-y-6">
 
                     <ConfigSection title="Segurança & Acesso" icon={ShieldCheck}>
-                        <div className="p-6 bg-white/5 rounded-2xl border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <form onSubmit={handlePasswordUpdate} className="p-6 bg-white/5 rounded-2xl border border-white/5 flex flex-col gap-4">
                             <div>
-                                <h4 className="text-lg font-bold text-white flex items-center gap-2">
+                                <h4 className="text-lg font-bold text-white flex items-center gap-2 mb-1">
                                     <Lock className="w-4 h-4 text-[#3a86ff]" />
                                     Alterar Senha
                                 </h4>
-                                <p className="text-sm text-gray-400 mt-1">Enviaremos um link seguro para o seu e-mail cadastrado.</p>
-                                <p className="text-xs font-mono text-gray-500 mt-3 bg-black/40 inline-block px-3 py-1 rounded-lg border border-white/5">
-                                    {session?.user?.email}
+                                <p className="text-sm text-gray-400 mb-4">Atualize sua senha diretamente por aqui.</p>
+                                <p className="text-xs font-mono text-gray-500 mb-6 bg-black/40 inline-block px-3 py-1 rounded-lg border border-white/5">
+                                    Conta: {session?.user?.email}
                                 </p>
                             </div>
-                            <button
-                                onClick={handleResetPassword}
-                                disabled={isResetting}
-                                className="px-6 py-3 bg-[#3a86ff]/10 border border-[#3a86ff]/30 rounded-xl text-sm font-bold text-[#3a86ff] hover:bg-[#3a86ff]/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 whitespace-nowrap"
-                            >
-                                {isResetting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                                Redefinir Senha
-                            </button>
-                        </div>
+
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <input
+                                    type="password"
+                                    placeholder="Nova Senha (min 6 caracteres)"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    className="flex-1 bg-[#0a0c14]/50 border border-white/10 focus:border-[#3a86ff]/50 rounded-xl px-4 py-3 text-white outline-none transition-all placeholder:text-gray-600"
+                                />
+                                <input
+                                    type="password"
+                                    placeholder="Confirmar Nova Senha"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    className="flex-1 bg-[#0a0c14]/50 border border-white/10 focus:border-[#3a86ff]/50 rounded-xl px-4 py-3 text-white outline-none transition-all placeholder:text-gray-600"
+                                />
+                            </div>
+
+                            {passwordError && (
+                                <div className="text-red-400 text-sm mt-2 flex items-center gap-2">
+                                    <AlertTriangle className="w-4 h-4" />
+                                    {passwordError}
+                                </div>
+                            )}
+
+                            {passwordSuccess && (
+                                <div className="text-emerald-400 text-sm mt-2 flex items-center gap-2">
+                                    <ShieldCheck className="w-4 h-4" />
+                                    {passwordSuccess}
+                                </div>
+                            )}
+
+                            <div className="mt-2 flex justify-end">
+                                <button
+                                    type="submit"
+                                    disabled={passwordLoading || !newPassword || !confirmPassword}
+                                    className="px-6 py-3 bg-[#3a86ff]/10 border border-[#3a86ff]/30 rounded-xl text-sm font-bold text-[#3a86ff] hover:bg-[#3a86ff]/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 whitespace-nowrap"
+                                >
+                                    {passwordLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                                    Salvar Nova Senha
+                                </button>
+                            </div>
+                        </form>
                     </ConfigSection>
 
                     {/* Danger Zone */}
@@ -127,9 +186,21 @@ export default function ConfiguracoesPage() {
                         <div className="absolute -right-6 -top-6 w-32 h-32 bg-[#3a86ff]/20 rounded-full blur-3xl group-hover:bg-[#3a86ff]/30 transition-all"></div>
                         <HelpCircle className="w-10 h-10 text-[#3a86ff] mb-6 relative z-10" />
                         <h3 className="text-xl font-bold text-white mb-3 relative z-10">Central de Ajuda</h3>
-                        <p className="text-sm text-gray-400 mb-8 relative z-10 leading-relaxed">
-                            Encontrou um bug ou precisa de suporte técnico com a sua conta? Nossa equipe está pronta para ajudar.
-                        </p>
+                        
+                        <div className="space-y-4 mb-6 relative z-10">
+                            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                                <h4 className="font-bold text-white text-sm mb-1">Como o Mentor IA funciona?</h4>
+                                <p className="text-xs text-gray-400 leading-relaxed">
+                                    O Mentor IA analisa sua rotina e tarefas usando o motor Gemini para fornecer conselhos de estudo hiper-personalizados.
+                                </p>
+                            </div>
+                            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                                <h4 className="font-bold text-white text-sm mb-1">Como funciona o Kanban?</h4>
+                                <p className="text-xs text-gray-400 leading-relaxed">
+                                    Mova as tarefas pelas colunas do quadro. O sistema monitora seus prazos e a IA prevê riscos de burnout baseados na sua carga.
+                                </p>
+                            </div>
+                        </div>
                         <button
                             onClick={() => alert("O suporte será aberto em uma nova aba na versão final.")}
                             className="w-full py-4 bg-[#3a86ff] text-white rounded-xl font-bold text-sm shadow-[0_0_20px_rgba(58,134,255,0.3)] hover:bg-[#2563eb] transition-all relative z-10"

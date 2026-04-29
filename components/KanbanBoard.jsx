@@ -96,8 +96,9 @@ function TaskCard({ task, colIndex, moveTask }) {
       </div>
 
       {/* Move controls */}
-      <div className="flex items-center justify-end gap-1.5 pt-1 border-t border-white/5">
-        <button
+      <div className="flex items-center justify-end pt-1 border-t border-white/5">
+        <div className="flex items-center gap-1.5">
+          <button
           onClick={() => !isFirst && moveTask(task.id, 'backward')}
           disabled={isFirst}
           aria-label="Mover para coluna anterior"
@@ -112,7 +113,8 @@ function TaskCard({ task, colIndex, moveTask }) {
           className={`p-1 rounded-lg transition-all ${isLast ? 'opacity-20 cursor-not-allowed' : 'hover:bg-[#3a86ff]/20 text-gray-400 hover:text-[#3a86ff]'}`}
         >
           <ChevronRight className="w-3.5 h-3.5" />
-        </button>
+          </button>
+        </div>
       </div>
     </div>
   );
