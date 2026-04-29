@@ -48,7 +48,11 @@ function TaskCard({ task, colIndex, moveTask }) {
   const isCompleted = task.status === 'completed';
 
   return (
-    <div className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 hover:bg-white/10 hover:border-white/20 transition-all duration-200 flex flex-col gap-3">
+    <div
+      draggable
+      onDragStart={(e) => e.dataTransfer.setData('text/plain', task.id.toString())}
+      className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 hover:bg-white/10 hover:border-white/20 transition-all duration-200 flex flex-col gap-3 cursor-grab active:cursor-grabbing"
+    >
 
       {/* Title */}
       <h4 className={`text-sm font-bold leading-snug ${isCompleted ? 'line-through text-gray-500' : 'text-gray-100 group-hover:text-white'} transition-colors`}>
@@ -118,7 +122,15 @@ function KanbanColumn({ column, tasks, colIndex, moveTask }) {
   const Icon = column.icon;
 
   return (
-    <div className="flex flex-col bg-[#05070e]/60 backdrop-blur-xl border border-white/5 rounded-[1.5rem] overflow-hidden">
+    <div
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        const taskId = e.dataTransfer.getData('text/plain');
+        if (taskId) moveTask(taskId, column.key);
+      }}
+      className="flex flex-col bg-[#05070e]/60 backdrop-blur-xl border border-white/5 rounded-[1.5rem] overflow-hidden"
+    >
 
       {/* Column header */}
       <div className={`flex items-center justify-between px-5 py-4 border-b border-white/5`}>

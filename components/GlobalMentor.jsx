@@ -23,7 +23,10 @@ export default function GlobalMentor() {
                 headers: { 'Authorization': `Bearer ${session.access_token}` }
             });
 
-            if (!res.ok) throw new Error('Falha no motor da IA');
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.error || 'Falha no motor da IA');
+            }
 
             const data = await res.json();
             setInsights(data.insights || []);

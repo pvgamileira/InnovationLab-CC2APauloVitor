@@ -1,0 +1,3 @@
+name: fix-gemini-api-route
+description: Fix Gemini API Route with Dynamic Rendering and Verbose Logging
+status: proposed

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookText, Loader2, CheckCircle2, Clock, FolderOpen, AlertCircle } from 'lucide-react';
+import { BookText, Loader2, CheckCircle2, Clock, FolderOpen, AlertCircle, Sparkles, X } from 'lucide-react';
 
 export default function CadernoPage() {
   const [session, setSession] = useState(null);
@@ -13,6 +13,8 @@ export default function CadernoPage() {
   const [activeSubjectId, setActiveSubjectId] = useState('general');
   const [notesText, setNotesText] = useState('');
   const [saveStatus, setSaveStatus] = useState('saved'); // 'saved', 'saving', 'error'
+  const [isCopilotLoading, setIsCopilotLoading] = useState(false);
+  const [aiResponse, setAiResponse] = useState(null);
   
   const typingTimeoutRef = useRef(null);
 
@@ -93,6 +95,38 @@ export default function CadernoPage() {
     }
   };
 
+  const handleCopilotEnhance = async () => {
+    if (!notesText.trim()) return;
+    setIsCopilotLoading(true);
+    setAiResponse(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Sem sessão ativa');
+
+      const response = await fetch('/api/gemini-copilot', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ noteContent: notesText })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'Erro no Copilot');
+      }
+
+      const data = await response.json();
+      setAiResponse(data.content);
+    } catch (err) {
+      console.error(err);
+      setAiResponse(`**Erro**: ${err.message}`);
+    } finally {
+      setIsCopilotLoading(false);
+    }
+  };
+
   const allTabs = [
     { id: 'general', name: 'Anotações Gerais', icon: BookText },
     ...subjects.map(s => ({ id: s.id, name: s.name, icon: FolderOpen }))
@@ -154,7 +188,16 @@ export default function CadernoPage() {
             <h2 className="text-lg font-bold text-gray-200">{activeTabDetails.name}</h2>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleCopilotEnhance}
+              disabled={isCopilotLoading || !notesText.trim()}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#3a86ff] to-[#2563eb] text-white font-bold text-sm shadow-[0_0_20px_rgba(58,134,255,0.3)] hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isCopilotLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              Aprimorar com IA
+            </button>
+
             <AnimatePresence mode="wait">
               {saveStatus === 'saving' && (
                 <motion.div 
@@ -190,25 +233,48 @@ export default function CadernoPage() {
           </div>
         </div>
 
-        {/* Text Area */}
-        <AnimatePresence mode="wait">
-          <motion.div 
-            key={activeSubjectId}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="flex-1 p-6 relative"
-          >
-            <textarea
-              value={notesText}
-              onChange={handleTextChange}
-              placeholder={`Comece a digitar em ${activeTabDetails.name}...`}
-              className="w-full h-full bg-transparent resize-none outline-none text-gray-200 leading-relaxed placeholder-gray-600/50 scrollbar-hide text-lg"
-              spellCheck="false"
-            />
-          </motion.div>
-        </AnimatePresence>
+        {/* Text Area and AI Response */}
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={activeSubjectId}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className={`p-6 relative flex flex-col ${aiResponse ? 'lg:w-1/2 border-r border-white/5' : 'w-full'} transition-all duration-300`}
+            >
+              <textarea
+                value={notesText}
+                onChange={handleTextChange}
+                placeholder={`Comece a digitar em ${activeTabDetails.name}...`}
+                className="w-full h-full bg-transparent resize-none outline-none text-gray-200 leading-relaxed placeholder-gray-600/50 scrollbar-hide text-lg"
+                spellCheck="false"
+              />
+            </motion.div>
+          </AnimatePresence>
+
+          {aiResponse && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="lg:w-1/2 p-6 bg-[#0a0c14]/80 backdrop-blur-xl overflow-y-auto relative"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-[#3a86ff] font-bold flex items-center gap-2">
+                  <Sparkles className="w-5 h-5" />
+                  Copilot IA
+                </h3>
+                <button onClick={() => setAiResponse(null)} className="text-gray-400 hover:text-white transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="text-gray-300 leading-relaxed whitespace-pre-wrap text-base">
+                {aiResponse}
+              </div>
+            </motion.div>
+          )}
+        </div>
       </div>
 
     </div>

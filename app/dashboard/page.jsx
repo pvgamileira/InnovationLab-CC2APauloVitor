@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation'; // <-- useRouter adicionado
 import { supabase } from '@/lib/supabase';
 import { PieChart, Pie, Cell, Tooltip } from 'recharts';
 import {
@@ -12,7 +11,6 @@ import XpHudBar from '@/components/XpHudBar';
 import KanbanBoard from '@/components/KanbanBoard';
 
 export default function DashboardPage() {
-  const router = useRouter(); // <-- Roteador instanciado
   const [session, setSession] = useState(null);
   const [subjects, setSubjects] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -27,26 +25,20 @@ export default function DashboardPage() {
   const [submitting, setSubmitting] = useState(false);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 
-  // CORREÇÃO CRÍTICA DO USEEFFECT AQUI
   useEffect(() => {
-    let isMounted = true;
-
     async function initSessionAndFetchData() {
       try {
         setLoading(true);
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
 
-        // Se não tiver sessão E não estiver no meio de um login do Google (hash na URL), expulsa.
-        if (!session && !window.location.hash.includes('access_token')) {
-          router.push('/auth');
+        if (!session) {
+          window.location.href = '/auth';
           return;
         }
 
-        if (session) {
-          setSession(session);
-          await refetchData(session.user.id);
-        }
+        setSession(session);
+        await refetchData(session.user.id);
       } catch (err) {
         setError(err.message);
         setLoading(false);
@@ -54,22 +46,7 @@ export default function DashboardPage() {
     }
 
     initSessionAndFetchData();
-
-    // Escuta em background pra pegar a sessão assim que o Google processar
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      if (event === 'SIGNED_IN' && newSession && isMounted) {
-        setSession(newSession);
-        await refetchData(newSession.user.id);
-      } else if (event === 'SIGNED_OUT' && isMounted) {
-        router.push('/auth');
-      }
-    });
-
-    return () => {
-      isMounted = false;
-      subscription?.unsubscribe();
-    };
-  }, [router]);
+  }, []);
 
   const refetchData = async (userId) => {
     try {
@@ -139,31 +116,46 @@ export default function DashboardPage() {
     }
   };
 
-  const STATUS_ORDER = ['pending', 'in_progress', 'completed'];
-
-  const moveTask = async (taskId, direction) => {
+  // A LÓGICA MESTRA DO KANBAN (Aceita Clique nas setas E o Drag and Drop)
+  const moveTask = async (taskId, actionOrStatus) => {
     try {
-      const task = tasks.find(t => t.id === taskId);
+      // Converte tudo para string para não dar erro de tipos (Type Mismatch)
+      const task = tasks.find(t => t.id.toString() === taskId.toString());
       if (!task) return;
-      const currentIndex = STATUS_ORDER.indexOf(task.status);
-      const validIndex = currentIndex === -1 ? 0 : currentIndex;
-      const newIndex = direction === 'forward'
-        ? Math.min(validIndex + 1, STATUS_ORDER.length - 1)
-        : Math.max(validIndex - 1, 0);
-      const newStatus = STATUS_ORDER[newIndex];
-      if (newStatus === task.status) return;
 
-      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
+      let newStatus = actionOrStatus;
+      const STATUS_ORDER = ['pending', 'in_progress', 'completed'];
 
+      // Se a ação for "forward" ou "backward" (clique nos botões)
+      if (actionOrStatus === 'forward' || actionOrStatus === 'backward') {
+        const currentIndex = STATUS_ORDER.indexOf(task.status);
+        const validIndex = currentIndex === -1 ? 0 : currentIndex;
+        const newIndex = actionOrStatus === 'forward'
+          ? Math.min(validIndex + 1, STATUS_ORDER.length - 1)
+          : Math.max(validIndex - 1, 0);
+        newStatus = STATUS_ORDER[newIndex];
+      }
+
+      // Se a tarefa já está na coluna certa, não faz nada
+      if (task.status === newStatus) return;
+
+      // 1. Atualiza a tela instantaneamente (Optimistic UI)
+      setTasks(prev => prev.map(t =>
+        t.id.toString() === taskId.toString() ? { ...t, status: newStatus } : t
+      ));
+
+      // 2. Salva no banco de dados
       const { error } = await supabase
         .from('academic_tasks')
         .update({ status: newStatus })
-        .eq('id', taskId);
+        .eq('id', task.id);
 
       if (error) throw error;
-      await refetchData(session.user.id);
+
     } catch (err) {
       alert(`Erro ao mover tarefa: ${err.message}`);
+      // Se algo falhar no banco, recarrega a tela para não ficar quebrado
+      if (session) await refetchData(session.user.id);
     }
   };
 
@@ -416,7 +408,10 @@ export default function DashboardPage() {
           </h2>
           <span className="text-xs text-gray-500 font-medium">{tasks.length} tarefa{tasks.length !== 1 ? 's' : ''} no total</span>
         </div>
+
+        {/* A LIGAÇÃO PERFEITA ESTÁ AQUI */}
         <KanbanBoard tasks={tasks} moveTask={moveTask} />
+
         <button
           onClick={() => setIsTaskModalOpen(true)}
           className="mt-5 w-full py-3 rounded-xl border border-dashed border-white/10 text-gray-500 font-bold tracking-wide hover:text-white hover:border-[#3a86ff]/50 hover:bg-[#3a86ff]/10 transition-all text-xs uppercase"
@@ -425,6 +420,7 @@ export default function DashboardPage() {
         </button>
       </div>
 
+      {/* MODAL DISCIPLINA */}
       {isSubjectModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/90 backdrop-blur-md animate-in fade-in" onClick={() => setIsSubjectModalOpen(false)}></div>
@@ -459,6 +455,7 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* MODAL TAREFA */}
       {isTaskModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/90 backdrop-blur-md animate-in fade-in" onClick={() => setIsTaskModalOpen(false)}></div>

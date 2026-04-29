@@ -2,111 +2,61 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-export async function GET(request) {
+export const dynamic = 'force-dynamic';
+
+export async function POST(request) {
   try {
+    // 1. Valida o Token do Usuário
     const authHeader = request.headers.get('Authorization');
     if (!authHeader) {
-      return NextResponse.json({ error: 'Missing Authorization header' }, { status: 401 });
+      return NextResponse.json({ error: 'Token ausente' }, { status: 401 });
     }
 
-    const token = authHeader.replace('Bearer ', '');
-
+    // 2. Conecta no Supabase
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
-    if (!supabaseUrl || !supabaseKey) {
-        return NextResponse.json({ error: 'Supabase configuration missing' }, { status: 500 });
-    }
-
-    const supabaseAuth = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: `Bearer ${token}` } }
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authHeader } }
     });
 
-    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) throw new Error('Usuário não autenticado');
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // 3. Puxa os dados para a IA analisar
+    const { data: tasks } = await supabase.from('academic_tasks').select('title, status').eq('user_id', user.id);
+    const { data: subjects } = await supabase.from('subjects').select('name, workload').eq('user_id', user.id);
+
+    const pending = tasks?.filter(t => t.status === 'pending').length || 0;
+    const completed = tasks?.filter(t => t.status === 'completed').length || 0;
+
+    // 4. Trava de Segurança da Chave
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error('A chave GEMINI_API_KEY não foi encontrada no .env.local');
     }
 
-    const { data: subjects, error: subError } = await supabaseAuth
-      .from('subjects')
-      .select('*')
-      .eq('user_id', user.id);
-
-    if (subError) {
-      console.error('Supabase error fetching subjects:', subError);
-      return NextResponse.json({ error: 'Error fetching subjects' }, { status: 500 });
-    }
-
-    const { data: tasks, error: tasksError } = await supabaseAuth
-      .from('academic_tasks')
-      .select('*')
-      .eq('user_id', user.id);
-
-    if (tasksError) {
-      console.error('Supabase error fetching tasks:', tasksError);
-      return NextResponse.json({ error: 'Error fetching tasks' }, { status: 500 });
-    }
-
-    const pendingTasks = (tasks || []).filter(t => t.status === 'pending').length;
-    const completedTasks = (tasks || []).filter(t => t.status === 'completed').length;
-    const subjectsList = (subjects || []).map(s => s.name).join(', ');
-
-    const dataContext = {
-      subjects: subjectsList || 'Nenhuma matéria cadastrada',
-      totalTasks: tasks?.length || 0,
-      completedTasks,
-      pendingTasks
-    };
-
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ error: 'Gemini API key missing' }, { status: 500 });
-    }
-
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
-        model: 'gemini-1.5-flash',
-        systemInstruction: "Aja como um mentor acadêmico sênior. Analise estes dados de desempenho e forneça 3 insights estratégicos curtos (máximo 2 frases cada) sobre o que o aluno deve priorizar."
-    });
+    // 5. Aciona o Gemini (TROCAMOS PARA O GEMINI-PRO UNIVERSAL)
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `
-      Dados de desempenho do aluno:
-      Matérias: ${dataContext.subjects}
-      Total de Tarefas: ${dataContext.totalTasks}
-      Tarefas Concluídas: ${dataContext.completedTasks}
-      Tarefas Pendentes: ${dataContext.pendingTasks}
-      
-      Retorne a resposta estritamente em formato JSON com a seguinte estrutura exata:
-      {
-        "insights": [
-          "insight 1",
-          "insight 2",
-          "insight 3"
-        ]
-      }
+      Aja como um mentor acadêmico sênior. O aluno tem ${subjects?.length || 0} disciplinas ativas.
+      Ele concluiu ${completed} tarefas e tem ${pending} pendentes.
+      Baseado nisso, forneça 3 insights estratégicos curtos (máximo 2 frases cada) em português sobre o que ele deve priorizar ou melhorar.
+      Retorne EXATAMENTE um objeto JSON válido, sem markdown, sem formatação extra, apenas isso:
+      {"insights": ["dica 1", "dica 2", "dica 3"]}
     `;
 
-    const result = await model.generateContent({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-            responseMimeType: "application/json",
-        }
-    });
+    const result = await model.generateContent(prompt);
+    let text = result.response.text();
 
-    const responseText = result.response.text();
-    let aiInsights;
-    try {
-      aiInsights = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error('Failed to parse Gemini response as JSON:', responseText);
-      return NextResponse.json({ error: 'Invalid AI response format' }, { status: 502 });
-    }
+    // 6. Limpa alucinações de formatação e converte
+    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    const jsonResponse = JSON.parse(text);
 
-    return NextResponse.json(aiInsights, { status: 200 });
+    return NextResponse.json(jsonResponse, { status: 200 });
 
-  } catch (err) {
-    console.error('Gemini Insights Error:', err);
-    return NextResponse.json({ error: 'Internal Server Error', details: err.message }, { status: 500 });
+  } catch (error) {
+    console.error("Erro no Motor Gemini:", error);
+    return NextResponse.json({ error: error.message, name: error.name, stack: error.stack }, { status: 500 });
   }
 }

@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, AreaChart, Area
+  PieChart, Pie, Cell
 } from 'recharts';
 
 export default function EstatisticasPage() {
@@ -93,19 +93,30 @@ export default function EstatisticasPage() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
-          setInsightsError('No session');
+          setInsightsError('Sessão não encontrada.');
           setIsLoadingInsights(false);
           return;
         }
 
+        // AQUI ESTÁ O SEGREDO: Adicionado method POST
         const response = await fetch('/api/gemini-insights', {
+          method: 'POST',
           headers: {
-            'Authorization': `Bearer ${session.access_token}`
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json'
           }
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch insights');
+          const errText = await response.text();
+          let errMsg = `Erro HTTP: ${response.status}`;
+          try {
+            const errJson = JSON.parse(errText);
+            errMsg = errJson.error || errMsg;
+          } catch (e) {
+            errMsg = errText || errMsg;
+          }
+          throw new Error(errMsg);
         }
 
         const data = await response.json();
@@ -148,7 +159,7 @@ export default function EstatisticasPage() {
           <Sparkles className="w-6 h-6 text-[#3a86ff]" />
           <h2 className="text-2xl font-bold text-gray-100 tracking-tight">Insights Inteligentes</h2>
         </div>
-        
+
         {isLoadingInsights ? (
           <div className="space-y-4 animate-pulse">
             <div className="h-4 bg-[#3a86ff]/20 rounded w-3/4"></div>
@@ -156,7 +167,13 @@ export default function EstatisticasPage() {
             <div className="h-4 bg-[#3a86ff]/20 rounded w-5/6"></div>
           </div>
         ) : insightsError ? (
-          <div className="text-gray-400 text-sm">Não foi possível carregar os insights no momento.</div>
+          <div className="bg-red-900/20 border border-red-500/30 rounded-2xl p-5 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-red-400 font-bold text-sm mb-1">Falha na comunicação com a IA</p>
+              <p className="text-red-300/80 text-xs font-mono">{insightsError}</p>
+            </div>
+          </div>
         ) : insightsData && insightsData.insights ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {insightsData.insights.map((insight, idx) => (
@@ -284,7 +301,7 @@ export default function EstatisticasPage() {
           </div>
         </div>
 
-        {/* AI Insights Panel (Full Width Bottom) */}
+        {/* AI Insights Panel (Full Width Bottom) - Painel Fixo */}
         <div className="lg:col-span-3 bg-gradient-to-r from-[#0a0c14] to-[#120f1e] border border-indigo-500/20 rounded-3xl p-8 relative overflow-hidden">
           <div className="absolute -right-20 -top-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl"></div>
 
