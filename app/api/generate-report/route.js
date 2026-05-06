@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { spawn } from 'child_process';
-import path from 'path';
-import fs from 'fs/promises';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 export async function POST(request) {
   try {
@@ -48,50 +47,48 @@ export async function POST(request) {
     const pendingTasks = (tasks || []).filter(t => t.status === 'pending').length;
     const completedTasks = (tasks || []).filter(t => t.status === 'completed').length;
 
-    const payload = {
-      user_id: user.id,
-      subjects: subjects || [],
-      tasks: tasks || [],
-      stats: {
-        totalWorkload,
-        pendingTasks,
-        completedTasks
-      }
-    };
+    const doc = new jsPDF();
+    
+    // Configurações do PDF
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    doc.text("Relatório Acadêmico - EduTrack AI", 14, 22);
 
-    const scriptPath = path.join(process.cwd(), 'scripts', 'generate_report.py');
-    const pythonProcess = spawn('python', [scriptPath]);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 14, 32);
 
-    const jsonString = JSON.stringify(payload);
-    pythonProcess.stdin.write(jsonString);
-    pythonProcess.stdin.end();
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("Resumo de Desempenho", 14, 45);
 
-    const pdfPath = await new Promise((resolve, reject) => {
-      let output = '';
-      let errorOutput = '';
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    doc.text(`Carga Horária Total: ${totalWorkload}h`, 14, 55);
+    doc.text(`Tarefas Pendentes: ${pendingTasks}`, 14, 62);
+    doc.text(`Tarefas Concluídas: ${completedTasks}`, 14, 69);
 
-      pythonProcess.stdout.on('data', (data) => {
-        output += data.toString();
-      });
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("Lista de Disciplinas", 14, 85);
 
-      pythonProcess.stderr.on('data', (data) => {
-        errorOutput += data.toString();
-      });
+    const tableData = (subjects || []).map(s => [
+      s.name,
+      s.professor || '-',
+      `${s.workload || 0}h`
+    ]);
 
-      pythonProcess.on('close', (code) => {
-        if (code !== 0) {
-          reject(new Error(`Python process exited with code ${code}: ${errorOutput}`));
-        } else {
-          resolve(output.trim());
-        }
-      });
+    doc.autoTable({
+      startY: 90,
+      head: [['Disciplina', 'Professor', 'Carga Horária']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [58, 134, 255] }
     });
 
-    const fileBuffer = await fs.readFile(pdfPath);
+    const pdfArrayBuffer = doc.output('arraybuffer');
 
-    fs.unlink(pdfPath).catch(() => { });
-
-    return new NextResponse(fileBuffer, {
+    return new NextResponse(pdfArrayBuffer, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
