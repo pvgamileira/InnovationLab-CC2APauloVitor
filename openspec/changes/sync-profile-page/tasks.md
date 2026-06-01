@@ -1,17 +1,17 @@
-# Tasks: Sync Profile Page
+# Tarefas: Sincronizar Página de Perfil
 
-## 1. Update State and Fetch Logic
-- [x] Open `app/dashboard/perfil/page.jsx`.
-- [x] Update `profileMeta` and `editForm` state defaults to match `user_profiles` columns (`name`, `occupation`, `course`, `institution`, `study_shift`).
-- [x] Modify `fetchProfileData` to query the `user_profiles` table and set the state.
+## 1. Atualizar Estado e Lógica de Busca (Fetch Logic)
+- [x] Abrir o arquivo `app/dashboard/perfil/page.jsx`.
+- [x] Atualizar os valores padrão de estado para `profileMeta` e `editForm` correspondendo às colunas da tabela `user_profiles` (`name`, `occupation`, `course`, `institution`, `study_shift`).
+- [x] Modificar `fetchProfileData` para consultar a tabela `user_profiles` e atualizar o estado da aplicação.
 
-## 2. Update Save Logic
-- [x] Modify `handleSaveProfile` to perform an `upsert` on the `user_profiles` table instead of `supabase.auth.updateUser`.
+## 2. Atualizar Lógica de Salvamento
+- [x] Modificar `handleSaveProfile` para realizar um `upsert` na tabela `user_profiles` em vez de chamar `supabase.auth.updateUser`.
 
-## 3. Update UI Display
-- [x] Import `Clock` from `lucide-react` if not already imported.
-- [x] Update the profile display card to show `occupation`, `course`, `institution`, and `study_shift` with corresponding icons.
+## 3. Atualizar Exibição na Interface (UI)
+- [x] Importar o ícone `Clock` da biblioteca `lucide-react` se ainda não estiver importado.
+- [x] Atualizar o cartão de exibição de perfil para mostrar `occupation`, `course`, `institution` e `study_shift` com os respectivos ícones.
 
-## 4. Update Edit Modal
-- [x] Change the input fields in the edit modal to match the new state (`name`, `course`, `institution`).
-- [x] Add `<select>` dropdowns for `study_shift` and `occupation` with the correct options.
+## 4. Atualizar Modal de Edição
+- [x] Alterar os campos de entrada (input fields) no modal de edição para corresponder ao novo estado (`name`, `course`, `institution`).
+- [x] Adicionar menus dropdown `<select>` para `study_shift` e `occupation` com as opções corretas.

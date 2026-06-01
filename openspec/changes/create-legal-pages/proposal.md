@@ -1,4 +1,4 @@
-# Proposal: Add Legal Pages (Privacy & Terms)
+# Proposta: Add Legal Pages (Privacy & Terms)
 
 ## Problem
 Currently, the application lacks standard legal documentation outlining terms of use and privacy practices. With the integration of AI (Google Gemini) and user data collection, it is crucial to transparently explain how data is stored, processed, and utilized solely for academic mentoring. The footer links on the Landing Page are currently dead links.

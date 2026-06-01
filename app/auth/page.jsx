@@ -60,6 +60,22 @@ export default function AuthPage() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!email) {
+      alert("Digite seu e-mail acima primeiro!");
+      return;
+    }
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`
+      });
+      if (error) throw error;
+      alert("Link de recuperação enviado para o seu e-mail!");
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   const handleGoogleAuth = async () => {
     try {
       setLoading(true);
@@ -137,16 +153,29 @@ export default function AuthPage() {
                 placeholder="seu-email@exemplo.com"
               />
             </div>
-            <div className="relative">
-              <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 pl-14 pr-5 text-white focus:border-[#3a86ff]/80 transition-all outline-none"
-                placeholder="Sua senha (min. 6 caracteres)"
-              />
+            <div>
+              <div className="relative">
+                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 pl-14 pr-5 text-white focus:border-[#3a86ff]/80 transition-all outline-none"
+                  placeholder="Sua senha (min. 6 caracteres)"
+                />
+              </div>
+              {isLogin && (
+                <div className="text-right mt-3">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-sm text-[#3a86ff] hover:text-[#2563eb] transition-colors font-semibold"
+                  >
+                    Esqueceu a senha?
+                  </button>
+                </div>
+              )}
             </div>
             <button
               type="submit"

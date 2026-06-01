@@ -1,22 +1,22 @@
-## Context
-We are implementing the actual application lifecycle operations. As the schemas and designs are strictly configured to isolate data via Row Level Security based on the active user session, we critically need the Authentication Gateway to issue these tokens. Simultaneously, the UI must localize to PT-BR, eliminate visual inconsistencies (emojis), and provide the input channels (modals) for actual data insertion.
+## Contexto
+Estamos implementando as operações reais do ciclo de vida da aplicação. Como os esquemas e designs são estritamente configurados para isolar dados via Row Level Security (RLS) com base na sessão ativa do usuário, precisamos criticamente do Gateway de Autenticação para emitir esses tokens. Simultaneamente, a interface do usuário (UI) deve ser localizada para PT-BR, eliminando inconsistências visuais (emojis) e fornecendo os canais de entrada (modais) para inserção real de dados.
 
-## Goals / Non-Goals
+## Objetivos / Não-Objetivos
 
-**Goals:**
-- Implement an `/auth` component purely via Next.js and `@supabase/supabase-js`.
-- Localize all dashboard phrasing to proper Brazilian Portuguese (pt-BR).
-- Build React state-managed modal interfaces for "Nova Disciplina" and "Nova Tarefa", executing Supabase `insert` mutations natively.
-- Enforce iconography purity: restrict use to SVG formats (like Lucide React) exclusively.
+**Objetivos:**
+- Implementar um componente `/auth` puramente via Next.js e `@supabase/supabase-js`.
+- Localizar todas as frases do dashboard para o Português Brasileiro (pt-BR) adequado.
+- Construir interfaces de modais gerenciadas por estado no React para "Nova Disciplina" e "Nova Tarefa", executando mutações de `insert` do Supabase de forma nativa.
+- Impor a pureza da iconografia: restringir o uso exclusivamente a formatos SVG (como Lucide React).
 
-**Non-Goals:**
-- Implementing Third-Party OAuth (Google/Github/Apple). We will focus strictly on the fundamental Email/Password methods.
-- Full CRUD matrix interactions. This specific spec focuses heavily on the `CREATE/INSERT` capability.
+**Não-Objetivos:**
+- Implementar OAuth de terceiros (Google/Github/Apple). Focaremos estritamente nos métodos fundamentais de E-mail/Senha.
+- Matriz completa de interações de CRUD. Esta especificação específica foca fortemente na capacidade de `CREATE/INSERT`.
 
-## Decisions
-- **Auth Strategy:** We will utilize client-side `@supabase/supabase-js` methods (`signUp` and `signInWithPassword`) housed within an `/auth` page acting as the portal. State syncs via `supabase.auth.getSession()`.
-- **UI Architecture for Modals:** The data-entry modals will exist structurally within `app/dashboard/page.jsx` or a parallel structural sibling, governed by explicit React State hooks (`isSubjectModalOpen`). Backgrounds will leverage intense `bg-black/80 backdrop-blur-sm` layers.
-- **Iconography Cleanup:** Emojis map differently across OS ecosystems fundamentally breaking the "Premium" vision. All emojis will be forcefully purged and replaced with deterministic vector graphic SVGs.
+## Decisões
+- **Estratégia de Autenticação:** Utilizaremos métodos client-side do `@supabase/supabase-js` (`signUp` e `signInWithPassword`) hospedados em uma página `/auth` que atua como portal. O estado é sincronizado via `supabase.auth.getSession()`.
+- **Arquitetura de UI para Modais:** Os modais de entrada de dados existirão estruturalmente dentro de `app/dashboard/page.jsx` ou em um irmão estrutural paralelo, governados por hooks explícitos de Estado do React (`isSubjectModalOpen`). Os fundos utilizarão camadas densas de `bg-black/80 backdrop-blur-sm`.
+- **Limpeza de Iconografia:** Emojis mapeiam-se de forma diferente entre ecossistemas de sistemas operacionais, quebrando fundamentalmente a visão "Premium". Todos os emojis serão removidos obrigatoriamente e substituídos por gráficos vetoriais determinísticos SVG.
 
-## Risks / Trade-offs
-- [Client-side Auth Transition] → Trade-off: Client-side routing between auth and dashboard might possess standard react-lifecycle delays. Mitigation: Strong suspense or unified loading (`loading subjects...`) states.
+## Riscos / Trade-offs
+- [Transição de Autenticação Client-side] → Trade-off: O roteamento client-side entre a autenticação e o dashboard pode apresentar atrasos padrão de ciclo de vida do React. Mitigação: Uso de Suspense robusto ou estados de carregamento unificados (como `carregando disciplinas...`).

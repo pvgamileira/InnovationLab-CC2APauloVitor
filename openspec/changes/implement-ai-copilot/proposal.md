@@ -1,4 +1,4 @@
-# Proposal: Implement AI Copilot in Notebook (Caderno)
+# Proposta: Implement AI Copilot in Notebook (Caderno)
 
 ## Problem
 Currently, users can write raw notes in the Caderno page, but they lack an intelligent way to structure them and create review materials automatically.

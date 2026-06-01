@@ -1,4 +1,4 @@
-## 1. Setup and Preparation
+## 1. Configuração and Preparation
 
 - [x] 1.1 Open `app/dashboard/estatisticas/page.jsx`.
 - [x] 1.2 Import `useState`, `useEffect` from React.

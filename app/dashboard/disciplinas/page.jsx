@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
-  FolderOpen, Layers, Loader2, CheckCircle2, Circle, AlertCircle, Calendar, Clock
+  FolderOpen, Layers, Loader2, CheckCircle2, Circle, AlertCircle, Calendar, Clock, Pencil, Trash2, X
 } from 'lucide-react';
 import {
   DndContext,
@@ -141,6 +141,56 @@ export default function DisciplinasPage() {
   const [loading, setLoading] = useState(true);
   const [activeTask, setActiveTask] = useState(null);
   const [activeFilter, setActiveFilter] = useState('all'); // Estado do filtro de disciplinas
+  
+  // Estados e Funções de CRUD do Editar e Excluir Disciplinas
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingSubject, setEditingSubject] = useState({ id: '', name: '', professor: '', workload: 0 });
+  const [submittingEdit, setSubmittingEdit] = useState(false);
+
+  const handleOpenEditModal = (subj) => {
+    setEditingSubject({
+      id: subj.id,
+      name: subj.name,
+      professor: subj.professor,
+      workload: subj.workload
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEditSubject = async (e) => {
+    e.preventDefault();
+    setSubmittingEdit(true);
+    try {
+      const { error } = await supabase
+        .from('subjects')
+        .update({
+          name: editingSubject.name,
+          professor: editingSubject.professor,
+          workload: parseInt(editingSubject.workload, 10)
+        })
+        .eq('id', editingSubject.id);
+
+      if (error) throw error;
+      setIsEditModalOpen(false);
+      await refetchData(session.user.id);
+    } catch (err) {
+      alert(`Erro ao editar disciplina: ${err.message}`);
+    } finally {
+      setSubmittingEdit(false);
+    }
+  };
+
+  const handleDeleteSubject = async (subjectId) => {
+    if (!confirm('Deseja realmente excluir esta disciplina? Todas as tarefas vinculadas a ela serão excluídas.')) return;
+    try {
+      await supabase.from('academic_tasks').delete().eq('subject_id', subjectId);
+      const { error } = await supabase.from('subjects').delete().eq('id', subjectId);
+      if (error) throw error;
+      await refetchData(session.user.id);
+    } catch (err) {
+      alert(`Erro ao excluir disciplina: ${err.message}`);
+    }
+  };
 
   useEffect(() => {
     async function initData() {
@@ -289,7 +339,24 @@ export default function DisciplinasPage() {
           </div>
         ) : (
           subjects.map(subj => (
-            <div key={subj.id} className="min-w-[280px] flex-shrink-0 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition-colors">
+            <div key={subj.id} className="min-w-[280px] flex-shrink-0 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition-all duration-300 relative group">
+              {/* CRUD Floating Controls */}
+              <div className="absolute top-4 right-4 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                <button 
+                  onClick={() => handleOpenEditModal(subj)}
+                  className="p-1.5 rounded-lg bg-white/5 hover:bg-[#3a86ff]/20 border border-white/10 hover:border-[#3a86ff]/40 text-gray-400 hover:text-[#3a86ff] transition-all cursor-pointer"
+                  title="Editar Disciplina"
+                >
+                  <Pencil className="w-3 h-3" />
+                </button>
+                <button 
+                  onClick={() => handleDeleteSubject(subj.id)}
+                  className="p-1.5 rounded-lg bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/40 text-gray-400 hover:text-red-400 transition-all cursor-pointer"
+                  title="Excluir Disciplina"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-full bg-[#3a86ff]/20 flex items-center justify-center">
                   <FolderOpen className="w-5 h-5 text-[#3a86ff]" />
@@ -364,6 +431,41 @@ export default function DisciplinasPage() {
           {activeTask ? <SortableTaskCard task={activeTask} /> : null}
         </DragOverlay>
       </DndContext>
+
+      {/* MODAL EDITAR DISCIPLINA */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={() => setIsEditModalOpen(false)}></div>
+          <div className="w-full max-w-lg bg-[#0a0c14] border border-[#3a86ff]/20 rounded-3xl p-8 shadow-[0_0_80px_rgba(58,134,255,0.1)] relative z-10 animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-extrabold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Editar Disciplina</h3>
+              <button onClick={() => setIsEditModalOpen(false)} className="text-gray-600 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleSaveEditSubject} className="space-y-5">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Nome da Disciplina</label>
+                <input required type="text" value={editingSubject.name} onChange={(e) => setEditingSubject({ ...editingSubject, name: e.target.value })} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-[#3a86ff] focus:ring-1 focus:ring-[#3a86ff] outline-none transition-all placeholder:text-gray-700" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Professor(a)</label>
+                <input required type="text" value={editingSubject.professor} onChange={(e) => setEditingSubject({ ...editingSubject, professor: e.target.value })} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-[#3a86ff] focus:ring-1 focus:ring-[#3a86ff] outline-none transition-all placeholder:text-gray-700" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Carga Horária (Horas)</label>
+                <input required type="number" min="1" value={editingSubject.workload} onChange={(e) => setEditingSubject({ ...editingSubject, workload: e.target.value })} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-[#3a86ff] focus:ring-1 focus:ring-[#3a86ff] outline-none transition-all placeholder:text-gray-700" />
+              </div>
+              <div className="pt-6 flex gap-4">
+                <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-3 px-4 bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/10 rounded-xl text-gray-300 font-bold transition-all">Cancelar</button>
+                <button type="submit" disabled={submittingEdit} className="flex-[2] py-3 px-4 bg-[#3a86ff] hover:bg-[#2563eb] shadow-[0_0_20px_rgba(58,134,255,0.3)] hover:shadow-[0_0_30px_rgba(58,134,255,0.5)] rounded-xl text-white font-extrabold transition-all disabled:opacity-50 flex justify-center items-center cursor-pointer">
+                  {submittingEdit ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : "Salvar Alterações"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );

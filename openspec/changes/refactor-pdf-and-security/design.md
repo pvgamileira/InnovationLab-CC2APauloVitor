@@ -1,6 +1,6 @@
 # Design: PDF Refactor & Security Headers
 
-## Component: PDF Generation Route
+## Componente: PDF Generation Route
 **File**: `app/api/generate-report/route.js`
 - **Dependencies**: Install `jspdf` and `jspdf-autotable`.
 - **Logic**:
@@ -13,7 +13,7 @@
   - Convert the document to an `arraybuffer` via `doc.output('arraybuffer')`.
   - Return the buffer in a `NextResponse` with headers `Content-Type: application/pdf` and `Content-Disposition: attachment`.
 
-## Component: Next.js Config
+## Componente: Next.js Config
 **File**: `next.config.mjs`
 - Export an asynchronous `headers()` function.
 - Target all routes `source: '/(.*)'`.

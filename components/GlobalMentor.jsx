@@ -58,7 +58,7 @@ export default function GlobalMentor() {
 
             {/* Janela de Insights (Glassmorphism) */}
             {isOpen && (
-                <div className="w-[320px] bg-[#0a0c14]/90 backdrop-blur-2xl border border-[#3a86ff]/30 rounded-2xl p-5 shadow-[0_10px_50px_rgba(0,0,0,0.5)] animate-in slide-in-from-bottom-5">
+                <div className="w-[320px] bg-[#0a0c14]/90 backdrop-blur-2xl border border-[#3a86ff]/30 rounded-2xl p-5 shadow-[0_10px_50px_rgba(0,0,0,0.5)] animate-in slide-in-from-bottom-5 max-h-[80vh] flex flex-col">
                     <div className="flex justify-between items-start mb-4 border-b border-white/5 pb-3">
                         <div>
                             <h3 className="font-bold text-white flex items-center gap-2">
@@ -76,7 +76,7 @@ export default function GlobalMentor() {
                         </button>
                     </div>
 
-                    <div className="min-h-[150px] flex flex-col justify-center">
+                    <div className="min-h-[150px] max-h-[60vh] flex flex-col justify-start overflow-y-auto pr-2">
                         {loading && (
                             <div className="flex flex-col items-center justify-center text-[#3a86ff]">
                                 <Loader2 className="w-8 h-8 animate-spin mb-2" />

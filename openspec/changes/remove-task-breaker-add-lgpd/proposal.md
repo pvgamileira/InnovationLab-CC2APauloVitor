@@ -1,4 +1,4 @@
-# Proposal: Remove Task Breaker and Add LGPD Consent
+# Proposta: Remove Task Breaker and Add LGPD Consent
 
 ## Problem
 The AI Task Breaker feature in the Kanban board has proven to be unintuitive and is cluttering the UI. Additionally, with the recent implementation of the Privacy Policy and Terms of Use, we need explicit user consent for LGPD compliance during the onboarding flow before processing their data with the Gemini API.

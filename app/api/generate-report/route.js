@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 export async function POST(request) {
   try {
@@ -78,7 +78,7 @@ export async function POST(request) {
       `${s.workload || 0}h`
     ]);
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: 90,
       head: [['Disciplina', 'Professor', 'Carga Horária']],
       body: tableData,

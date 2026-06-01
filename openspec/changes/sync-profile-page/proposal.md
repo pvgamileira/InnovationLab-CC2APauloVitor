@@ -1,12 +1,12 @@
-# Proposal: Sync Profile Page with `user_profiles` table
+# Proposta: Sincronizar Página de Perfil com a Tabela `user_profiles`
 
-## Problem
-The Profile page currently reads from `session.user.user_metadata` and uses placeholders (`name`, `role`, `education`, `university`). This is disconnected from the Progressive Profiling data we collect during onboarding into the `user_profiles` table (`name`, `institution`, `course`, `study_shift`, `occupation`).
+## Problema
+A página de Perfil lê atualmente de `session.user.user_metadata` e utiliza placeholders (`name`, `role`, `education`, `university`). Isso está desconectado dos dados de Perfil Progressivo (Progressive Profiling) que coletamos durante o onboarding e salvamos na tabela `user_profiles` (`name`, `institution`, `course`, `study_shift`, `occupation`).
 
-## Proposed Solution
-Refactor the Profile page (`app/dashboard/perfil/page.jsx`) to fetch its initial data from the `user_profiles` Supabase table. If the data is updated via the "Editar Perfil" modal, it should save the new information back to `user_profiles` using an `upsert` operation. The UI will be updated to display the specific fields: Nome, Instituição, Curso, Turno e Ocupação.
+## Solução Proposta
+Refatorar a página de Perfil (`app/dashboard/perfil/page.jsx`) para buscar seus dados iniciais na tabela `user_profiles` do Supabase. Se os dados forem atualizados por meio do modal "Editar Perfil", a nova informação deve ser salva de volta na tabela `user_profiles` usando uma operação de `upsert`. A UI será atualizada para exibir os campos específicos: Nome, Instituição, Curso, Turno e Ocupação.
 
-## Benefits
-- Centralized truth for user data in the database.
-- Consistency between the onboarding modal and the profile page.
-- AI features can rely entirely on `user_profiles` without fragmentation.
+## Benefícios
+- Fonte de verdade centralizada para os dados do usuário no banco de dados.
+- Consistência entre o modal de onboarding e a página de perfil.
+- As funcionalidades de IA podem depender inteiramente da tabela `user_profiles` sem fragmentação de dados.

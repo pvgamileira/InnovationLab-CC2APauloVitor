@@ -1,8 +1,8 @@
-## Why
+## Por que
 
 The current task list in the dashboard renders all tasks in a single vertical list regardless of status, making it hard to get a quick visual overview of workflow state. A 3-column Kanban board (Backlog / Em Progresso / Concluídas) gives users an instant spatial sense of their academic pipeline and encourages moving tasks forward deliberately.
 
-## What Changes
+## O que muda
 
 - Replace the "Backlog de Tarefas" flat list section in `app/dashboard/page.jsx` with a new `KanbanBoard` component.
 - Introduce a third task status value: `"in_progress"` (alongside the existing `"pending"` and `"completed"`).
@@ -11,15 +11,15 @@ The current task list in the dashboard renders all tasks in a single vertical li
 - Task cards display: title, subject tag, due date, overdue/upcoming badges, and directional arrow buttons to move left/right between columns.
 - **Zero changes** to API routes, PDF logic, auth, or Supabase query structure.
 
-## Capabilities
+## Funcionalidades
 
-### New Capabilities
+### Novas Funcionalidades
 - `kanban-board`: A 3-column Kanban view rendering tasks grouped by status with glassmorphism card styling and status-transition controls.
 
-### Modified Capabilities
+### Funcionalidades Modificadas
 None — the Supabase fetching (`refetchData`), updating (`toggleTaskStatus` → replaced by `moveTask`), and all auth logic remain structurally unchanged. Only the UI rendering layer changes.
 
-## Impact
+## Impacto
 
 - `app/dashboard/page.jsx`: Remove old backlog section; add `KanbanBoard` import and `moveTask` handler; pass `tasks`, `subjects`, and `moveTask` as props.
 - `components/KanbanBoard.jsx`: New file.

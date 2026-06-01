@@ -1,19 +1,19 @@
-## 1. Scaffold and Setup
+## 1. Estrutura e Configuração (Scaffold and Setup)
 
-- [ ] 1.1 Create the directory structure `app/dashboard/perfil/` and initialize `page.jsx` with `"use client"`.
-- [ ] 1.2 Import `framer-motion` (`motion`) and define a top-level staggered container variant and an item variant.
+- [ ] 1.1 Criar a estrutura do diretório `app/dashboard/perfil/` e inicializar `page.jsx` com `"use client"`.
+- [ ] 1.2 Importar `framer-motion` (`motion`) e definir uma variante de container escalonada (staggered) de nível superior e uma variante de item.
 
-## 2. RPG Character Sheet UI
+## 2. Interface da Ficha de Personagem RPG (RPG Character Sheet UI)
 
-- [ ] 2.1 Build the primary Identity Card: Wrap in `<motion.div>`. Include a large metallic placeholder avatar ring. Populate with the exact placeholder strings: "Paulo Vitor", "Analista de Suporte de TI", and "Ciência da Computação - 2º Semestre (Noturno) na Faculdade Impacta".
-- [ ] 2.2 Style the Identity Card using Rich Black aesthetics (`bg-[#0a0c14]/80 backdrop-blur-2xl border border-white/5`). Add metallic text accents (e.g., `text-gray-400`).
+- [ ] 2.1 Construir o Cartão de Identidade principal: envolver em um `<motion.div>`. Incluir um anel de avatar grande e metálico como placeholder. Preencher com as strings estáticas exatas: "Paulo Vitor", "Analista de Suporte de TI" e "Ciência da Computação - 2º Semestre (Noturno) na Faculdade Impacta".
+- [ ] 2.2 Estilizar o Cartão de Identidade usando a estética Rich Black (`bg-[#0a0c14]/80 backdrop-blur-2xl border border-white/5`). Adicionar detalhes de texto metálicos (ex: `text-gray-400`).
 
-## 3. Gamification Matrix
+## 3. Matriz de Gamificação (Gamification Matrix)
 
-- [ ] 3.1 Build the XP / Level block: Display "Level 12". Include a thin, elegant progress bar (e.g., 65% width) with a neon glow (`shadow-[0_0_15px_rgba(58,134,255,0.6)]`) and matching `#3a86ff` fill.
-- [ ] 3.2 Build the Stats Grid below the XP bar (`grid-cols-2`). Include distinct, smaller glassmorphism cards for 'Tarefas Concluídas' (e.g., 148) and 'Horas de Estudo' (e.g., 34h). Use `lucide-react` icons.
+- [ ] 3.1 Construir o bloco de XP / Nível: Exibir "Level 12". Incluir uma barra de progresso fina e elegante (ex: 65% de largura) com um brilho neon (`shadow-[0_0_15px_rgba(58,134,255,0.6)]`) e preenchimento `#3a86ff` correspondente.
+- [ ] 3.2 Construir a Grade de Estatísticas abaixo da barra de XP (`grid-cols-2`). Incluir cartões de glassmorphism menores e distintos para 'Tarefas Concluídas' (ex: 148) e 'Horas de Estudo' (ex: 34h). Usar ícones do `lucide-react`.
 
-## 4. Final Verification
+## 4. Verificação Final
 
-- [ ] 4.1 Ensure the layout cleanly stacks on mobile and expands safely on desktop sizes (`max-w-5xl` constraint).
-- [ ] 4.2 Verify that no database queries are inadvertently breaking the structure, keeping the UI completely static as requested.
+- [ ] 4.1 Garantir que o layout se empilhe de forma limpa em dispositivos móveis e se expanda com segurança em tamanhos de desktop (restrição `max-w-5xl`).
+- [ ] 4.2 Verificar se nenhuma consulta ao banco de dados está quebrando a estrutura de forma inadvertida, mantendo a interface completamente estática conforme solicitado.

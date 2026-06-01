@@ -1,33 +1,33 @@
-## Context
+## Contexto
 
-The current `app/page.jsx` serves as the project's root route but lacks a polished marketing-grade landing page. The first impression is critical for user acquisition. This design establishes the visual architecture, animation strategy, and structural skeleton that will eventually host a 3D Spline robot — a key premium design element.
+O arquivo `app/page.jsx` atual serve como a rota raiz do projeto, mas não possui uma landing page polida voltada para marketing. A primeira impressão é crítica para a aquisição de usuários. Este design estabelece a arquitetura visual, a estratégia de animação e o esqueleto estrutural que eventualmente abrigará um robô 3D do Spline — um elemento-chave do design premium.
 
-## Goals / Non-Goals
+## Objetivos / Não-Objetivos
 
-**Goals:**
-- Build `app/page.jsx` as a `"use client"` component.
-- Use Framer Motion for staggered fade-up entrance animations on the left column.
-- Achieve a 50/50 split hero layout with an absolute top navbar.
-- Keep Right Column as a placeholder div only — no Spline integration at this stage.
-- All user-facing copy in pt-BR.
+**Objetivos:**
+- Construir `app/page.jsx` como um componente cliente (`"use client"`).
+- Usar Framer Motion para animações de entrada com fade-up escalonado (staggered) na coluna esquerda.
+- Obter um layout de hero dividido em 50/50 com uma navbar superior absoluta.
+- Manter a Coluna Direita apenas como uma div de placeholder — sem integração com o Spline nesta etapa.
+- Todos os textos voltados ao usuário em pt-BR.
 
-**Non-Goals:**
-- Integrating Spline or any 3D library.
-- Implementing authentication flows on this page (links to `/auth`).
-- Modifying `app/dashboard/page.jsx`, API routes, or any other page.
-- Full responsive/mobile optimization (foundation only).
+**Não-Objetivos:**
+- Integrar Spline ou qualquer biblioteca 3D.
+- Implementar fluxos de autenticação nesta página (os links apenas apontarão para `/auth`).
+- Modificar `app/dashboard/page.jsx`, rotas de API ou qualquer outra página.
+- Otimização responsiva/mobile completa (apenas a base).
 
-## Decisions
+## Decisões
 
-- **`"use client"`**: Required since Framer Motion hooks (`useAnimation`, `motion`) rely on browser APIs and cannot run in React Server Components.
-- **Framer Motion over CSS animations**: Provides declarative, composable, and easily adjustable stagger orchestration — critical for the premium entrance feel.
-- **`staggerChildren` on the container variant**: Each child animates sequentially with a slight delay, giving a polished "typewriter-row" feel without JS timers.
-- **Navbar: absolute positioning**: Keeps it visually overlapping the hero without impacting layout flow. Logo right, nav links left, matching design spec.
-- **Right column: empty placeholder div**: Enforces a strict boundary between skeleton and future Spline work. The comment `{/* SPLINE 3D ROBOT GOES HERE */}` is mandated as the integration handoff contract.
-- **`framer-motion` dependency**: Already common in Next.js / React stacks. Must be installed via npm if not already present.
+- **`"use client"`**: Obrigatório, uma vez que os hooks do Framer Motion (`useAnimation`, `motion`) dependem das APIs do navegador e não podem ser executados em React Server Components.
+- **Framer Motion em detrimento de animações CSS**: Fornece orquestração declarativa, combinável e facilmente ajustável para animações escalonadas (stagger) — essencial para a sensação de entrada premium.
+- **`staggerChildren` no variante do container**: Cada elemento filho é animado sequencialmente com um pequeno atraso, proporcionando uma sensação polida sem a necessidade de temporizadores em JavaScript.
+- **Navbar: posicionamento absoluto**: Mantém a barra sobreposta visualmente ao hero sem impactar o fluxo do layout. Logo à direita, links de navegação à esquerda, combinando com a especificação do design.
+- **Coluna direita: div vazia para placeholder**: Impõe um limite estrito entre o esqueleto e o futuro trabalho com o Spline. O comentário `{/* SPLINE 3D ROBOT GOES HERE */}` é obrigatório como o contrato de integração.
+- **Dependência `framer-motion`**: Já é comum em stacks Next.js / React. Deve ser instalada via npm se ainda não estiver presente.
 
-## Risks / Trade-offs
+## Riscos / Trade-offs
 
-- **Risk**: `framer-motion` not installed yet → **Mitigation**: Task 1.1 explicitly checks and installs it.
-- **Risk**: Overwriting existing `app/page.jsx` content → **Mitigation**: Task is scoped to recreate the file entirely; any valuable existing content should be manually preserved beforehand.
-- **Risk**: `"use client"` boundary may conflict with app-level server layouts → **Mitigation**: Next.js App Router supports client components anywhere; root layout remains a server component.
+- **Risco**: `framer-motion` não instalado ainda → **Mitigação**: A Tarefa 1.1 verifica e o instala explicitamente.
+- **Risco**: Sobrescrever o conteúdo de `app/page.jsx` existente → **Mitigação**: A tarefa é escopada para recriar o arquivo inteiramente; qualquer conteúdo existente valioso deve ser preservado manualmente antes.
+- **Risco**: O limite de `"use client"` pode entrar em conflito com layouts baseados em servidor no nível do app → **Mitigação**: O Next.js App Router suporta componentes cliente em qualquer lugar; o layout raiz permanece como um componente de servidor.

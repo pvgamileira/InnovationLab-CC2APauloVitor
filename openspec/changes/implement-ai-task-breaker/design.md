@@ -1,6 +1,6 @@
 # Design: Implement AI Task Breaker
 
-## Component: API Route
+## Componente: API Route
 **File**: `app/api/gemini-task-breaker/route.js`
 - Must include `export const dynamic = 'force-dynamic';`.
 - Authenticate via Supabase Authorization header (`createClient` passing the header).
@@ -11,7 +11,7 @@
 - Parse the result string as JSON array.
 - Return `{ subtasks: [...] }` as JSON (status 200).
 
-## Component: Dashboard Page
+## Componente: Dashboard Page
 **File**: `app/dashboard/page.jsx`
 - Add async function `breakDownTask(task)`.
 - Set a global or localized loading state (since `KanbanBoard` will need to reflect it, maybe set `breakingTaskId` in state to show a loader on the specific task).
@@ -21,7 +21,7 @@
 - Call `refetchData()` to refresh the dashboard.
 - Pass `breakDownTask` and `breakingTaskId` as props to `<KanbanBoard />`.
 
-## Component: Kanban Board & TaskCard
+## Componente: Kanban Board & TaskCard
 **File**: `components/KanbanBoard.jsx`
 - Destructure `breakDownTask` and `breakingTaskId` from props in `<KanbanBoard />` and pass them down through `<KanbanColumn />` to `<TaskCard />`.
 - In `TaskCard`, import `Wand2` from `lucide-react`.

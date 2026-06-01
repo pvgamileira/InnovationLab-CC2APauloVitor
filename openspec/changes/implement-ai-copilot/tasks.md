@@ -1,4 +1,4 @@
-# Tasks: Implement AI Copilot in Notebook
+# Tarefas: Implement AI Copilot in Notebook
 
 ## 1. Create API Route
 - [x] Create `app/api/gemini-copilot/route.js`.

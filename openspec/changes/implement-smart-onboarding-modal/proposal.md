@@ -1,19 +1,19 @@
-# Proposal: Implement Smart Onboarding Modal in Dashboard
+# Proposta: Implementar Modal de Onboarding Inteligente no Dashboard
 
-## Problem
-Currently, the AI mentor lacks specific context about the user's educational background, such as their course, study shift, or whether they work and study simultaneously. This limits the AI's ability to provide deeply personalized insights.
+## Problema
+Atualmente, o mentor de IA carece de contexto específico sobre a formação educacional do usuário, como seu curso, turno de estudo ou se estuda e trabalha simultaneamente. Isso limita a capacidade da IA de fornecer insights profundamente personalizados.
 
-## Proposed Solution
-Implement a "Progressive Profiling" onboarding modal that appears exactly once when a user logs into the dashboard for the first time. The modal will collect:
-- Name
-- Institution
-- Course
-- Study Shift (Manhã, Tarde, Noite, Integral)
-- Occupation (Só Estudo, Trabalho e Estudo, Estágio, Outro)
+## Solução Proposta
+Implementar um modal de onboarding de "Perfil Progressivo" (Progressive Profiling) que aparece exatamente uma vez quando um usuário faz login no dashboard pela primeira vez. O modal coletará:
+- Nome
+- Instituição
+- Curso
+- Turno (Manhã, Tarde, Noite, Integral)
+- Ocupação (Só Estudo, Trabalho e Estudo, Estágio, Outro)
 
-This data will be saved in the `user_profiles` table and subsequently used to feed context into the Gemini AI features. The modal will use a sleek glassmorphism UI to maintain the premium feel of the app.
+Esses dados serão salvos na tabela `user_profiles` e, posteriormente, utilizados para fornecer contexto para os recursos do Gemini AI. O modal utilizará uma interface elegante de glassmorphism para manter a sensação premium do aplicativo.
 
-## Benefits
-- Drastically improves AI personalization.
-- Enhances user experience with a welcoming first impression.
-- Follows modern progressive profiling practices without overwhelming the user during signup.
+## Benefícios
+- Melhora drasticamente a personalização da IA.
+- Aprimora a experiência do usuário com uma primeira impressão calorosa.
+- Segue práticas modernas de progressive profiling sem sobrecarregar o usuário durante o cadastro inicial.

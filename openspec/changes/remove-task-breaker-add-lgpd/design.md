@@ -1,18 +1,18 @@
 # Design: Remove Task Breaker & Add LGPD Consent
 
-## Component: Kanban Board
+## Componente: Kanban Board
 **File**: `components/KanbanBoard.jsx`
 - Remove the `Wand2` import from `lucide-react`.
 - Remove the `onBreakTask` and `breakingTaskId` props.
 - Remove the `<button>` that triggers the AI Task Breaker inside the `TaskCard` component (the one with the magic wand).
 
-## Component: Dashboard Page
+## Componente: Dashboard Page
 **File**: `app/dashboard/page.jsx`
 - Remove the `breakingTaskId` state.
 - Remove the `breakDownTask` async function entirely.
 - Remove the props `onBreakTask` and `breakingTaskId` passed to the `<KanbanBoard />` component.
 
-## Component: Onboarding Modal
+## Componente: Onboarding Modal
 **File**: `components/OnboardingModal.jsx`
 - Add a new state: `const [consent, setConsent] = useState(false);`
 - Add a checkbox `<input type="checkbox" required />` right above the submit button.

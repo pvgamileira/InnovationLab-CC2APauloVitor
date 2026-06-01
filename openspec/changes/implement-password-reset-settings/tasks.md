@@ -1,18 +1,18 @@
-# Tasks: Implement Password Reset Logic in Settings
+# Tarefas: Implementar Lógica de Redefinição de Senha nas Configurações
 
-## 1. Prepare State Variables
-- [x] Open `app/dashboard/configuracoes/page.jsx`.
-- [x] Add the following state variables: `newPassword`, `confirmPassword`, `passwordLoading`, `passwordError`, and `passwordSuccess`.
+## 1. Preparar Variáveis de Estado (State Variables)
+- [x] Abrir o arquivo `app/dashboard/configuracoes/page.jsx`.
+- [x] Adicionar as seguintes variáveis de estado: `newPassword`, `confirmPassword`, `passwordLoading`, `passwordError` e `passwordSuccess`.
 
-## 2. Implement Update Logic
-- [x] Create the `handlePasswordUpdate(e)` function.
-- [x] Add length validation (>= 6 chars) and equality validation (`newPassword === confirmPassword`).
-- [x] Implement the `supabase.auth.updateUser({ password: newPassword })` call within a `try/catch` block.
-- [x] Handle state updates for clearing inputs, setting errors, and showing success messages.
+## 2. Implementar Lógica de Atualização
+- [x] Criar a função `handlePasswordUpdate(e)`.
+- [x] Adicionar validação de tamanho (mínimo de 6 caracteres) e validação de igualdade (`newPassword === confirmPassword`).
+- [x] Implementar a chamada `supabase.auth.updateUser({ password: newPassword })` dentro de um bloco `try/catch`.
+- [x] Tratar atualizações de estado para limpar os inputs, definir erros e exibir mensagens de sucesso.
 
-## 3. Update the UI Form
-- [x] Locate the "Segurança & Acesso" section inside the `ConfiguracoesPage` component.
-- [x] Replace the old button logic with a `<form onSubmit={handlePasswordUpdate}>`.
-- [x] Add two styled password input fields for the new password and the confirmation.
-- [x] Add conditional rendering for `passwordError` and `passwordSuccess` alerts.
-- [x] Ensure the "Salvar Nova Senha" button shows a loading spinner and is disabled while `passwordLoading` is true.
+## 3. Atualizar o Formulário na Interface (UI)
+- [x] Localizar a seção "Segurança & Acesso" dentro do componente `ConfiguracoesPage`.
+- [x] Substituir a lógica do botão antigo por um `<form onSubmit={handlePasswordUpdate}>`.
+- [x] Adicionar dois campos de entrada de senha estilizados para a nova senha e a confirmação.
+- [x] Adicionar renderização condicional para alertas de `passwordError` e `passwordSuccess`.
+- [x] Garantir que o botão "Salvar Nova Senha" exiba um spinner de carregamento e fique desativado (disabled) enquanto `passwordLoading` for verdadeiro.

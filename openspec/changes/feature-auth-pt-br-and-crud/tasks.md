@@ -1,16 +1,16 @@
-## 1. Authentication Layer
+## 1. Camada de Autenticação
 
-- [x] 1.1 Scaffold the `app/auth/page.jsx` route mimicking the Premium UI dark aesthetic parameters.
-- [x] 1.2 Implement the Supabase Email/Password interactions (`signUp`, `signInWithPassword`) natively mapping form states (loading, errors).
-- [x] 1.3 Update the main `app/dashboard/page.jsx` logic to enforce session validation actively blocking unauthenticated endpoints and storing `user.id`.
+- [x] 1.1 Criar a estrutura da rota `app/auth/page.jsx` imitando os parâmetros estéticos escuros da Premium UI.
+- [x] 1.2 Implementar as interações de E-mail/Senha do Supabase (`signUp`, `signInWithPassword`) mapeando nativamente os estados do formulário (carregamento, erros).
+- [x] 1.3 Atualizar a lógica principal de `app/dashboard/page.jsx` para impor a validação de sessão, bloqueando ativamente endpoints não autenticados e armazenando o `user.id`.
 
-## 2. UI Polish & Translation (PT-BR)
+## 2. Polimento de UI & Tradução (PT-BR)
 
-- [x] 2.1 Refactor the DOM systematically purging all native OS emojis present, optionally utilizing inline SVG traces or libraries mimicking Lucide React.
-- [x] 2.2 Translate all static UI strings, analytical headers, and structural placeholders across `/dashboard` into localized Brazilian Portuguese (pt-BR).
+- [x] 2.1 Refatorar o DOM expurgando sistematicamente todos os emojis nativos presentes no sistema operacional, utilizando opcionalmente traços inline SVG ou bibliotecas que imitem o Lucide React.
+- [x] 2.2 Traduzir todas as strings estáticas da UI, cabeçalhos analíticos e placeholders estruturais do `/dashboard` para o Português Brasileiro localizado (pt-BR).
 
-## 3. CRUD Modals Engineering
+## 3. Engenharia de Modais de CRUD
 
-- [x] 3.1 Construct a Glassmorphism React Modal overlay explicitly managing states for "Nova Disciplina" (fetching `name`, `professor`, `workload`).
-- [x] 3.2 Construct a secondary Glassmorphism Modal overlay for "Nova Tarefa" enabling dynamic `subject_id` dropdown selection.
-- [x] 3.3 Ensure both modal boundaries successfully dispatch the `INSERT` payloads to the Supabase endpoint incorporating `auth.uid()` and gracefully rehydrating the active view.
+- [x] 3.1 Construir uma sobreposição de Modal React com Glassmorphism gerenciando explicitamente os estados para "Nova Disciplina" (capturando `name`, `professor`, `workload`).
+- [x] 3.2 Construir uma segunda sobreposição de Modal com Glassmorphism para "Nova Tarefa", permitindo a seleção dinâmica de `subject_id` em um menu dropdown.
+- [x] 3.3 Garantir que ambos os limites de modal enviem com sucesso os payloads de `INSERT` para o endpoint do Supabase, incorporando `auth.uid()` e reidratando suavemente a visualização ativa.

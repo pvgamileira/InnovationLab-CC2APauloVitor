@@ -1,26 +1,26 @@
-## Why
+## Por que
 
-The platform requires a modern and captivating landing page to attract and convert new users. Implementing a sleek UI with Framer Motion animations and preparation for a 3D Spline asset gives the initial "wow" factor necessary for a premium academic efficiency tool.
+A plataforma exige uma landing page moderna e cativante para atrair e converter novos usuários. A implementação de uma interface elegante com animações via Framer Motion e a preparação para um elemento 3D do Spline proporcionam o fator "uau" inicial necessário para uma ferramenta de eficiência acadêmica premium.
 
-## What Changes
+## O que muda
 
-- Modify or create `app/page.jsx` as a client component (`"use client"`).
-- Implement a Rich Black (`#02040a`) background theme.
-- Add an absolute top navigation bar featuring the Logo on the Top Right and "Login" / "Cadastrar-se" buttons on the Top Left.
-- Create a 50/50 split layout for the main section.
-- Implement the Left Column with a Framer Motion staggered fade-up animation containing a title, subtitle, and call-to-action buttons in Portuguese (pt-BR).
-- Implement the Right Column as a placeholder for a 3D Spline model, specifically using the comment `{/* SPLINE 3D ROBOT GOES HERE */}`. No Spline imports or usage at this stage.
+- Modificar ou criar o arquivo `app/page.jsx` como um componente cliente (`"use client"`).
+- Implementar um tema de fundo Rich Black (`#02040a`).
+- Adicionar uma barra de navegação superior absoluta com o Logotipo no Canto Superior Direito e os botões "Entrar" / "Cadastrar-se" no Canto Superior Esquerdo.
+- Criar um layout dividido 50/50 para a seção principal.
+- Implementar a Coluna Esquerda com uma animação de fade-up escalonada (staggered) usando Framer Motion, contendo título, subtítulo e botões de chamada para ação (CTA) em português (pt-BR).
+- Implementar a Coluna Direita como um placeholder para um modelo 3D do Spline, especificando o comentário `{/* SPLINE 3D ROBOT GOES HERE */}`. Nenhuma importação ou uso do Spline nesta etapa.
 
-## Capabilities
+## Funcionalidades
 
-### New Capabilities
-- `animated-landing-page-skeleton`: Defines the structural layout and Framer Motion entrance animations for the primary marketing landing page, introducing the Rich Black theme and placeholder structure for complex 3D assets.
+### Novas Funcionalidades
+- `animated-landing-page-skeleton`: Define o layout estrutural e as animações de entrada do Framer Motion para a landing page principal de marketing, introduzindo o tema Rich Black e a estrutura do placeholder para elementos 3D complexos.
 
-### Modified Capabilities
-None
+### Funcionalidades Modificadas
+Nenhuma
 
-## Impact
+## Impacto
 
-- Overwrites the existing `app/page.jsx` (if any).
-- Requires `framer-motion` to be installed and available in the project.
-- Sets the foundation for the marketing/public face of the application without touching authenticated routing logic.
+- Sobrescreve o arquivo `app/page.jsx` existente (se houver).
+- Exige que o `framer-motion` esteja instalado e disponível no projeto.
+- Estabelece a base para a fachada pública/marketing da aplicação sem afetar a lógica de roteamento autenticado.

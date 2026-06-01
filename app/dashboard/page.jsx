@@ -5,7 +5,8 @@ import { supabase } from '@/lib/supabase';
 import { PieChart, Pie, Cell, Tooltip } from 'recharts';
 import {
   BookOpen, Plus, Clock, ListTodo, CheckCircle2,
-  Circle, X, Search, Calendar, FolderOpen, AlertCircle, Play, BarChart3, Download
+  Circle, X, Search, Calendar, FolderOpen, AlertCircle, Play, BarChart3, Download,
+  Zap, Target, ShieldCheck
 } from 'lucide-react';
 import XpHudBar from '@/components/XpHudBar';
 import KanbanBoard from '@/components/KanbanBoard';
@@ -26,6 +27,39 @@ export default function DashboardPage() {
   const [submitting, setSubmitting] = useState(false);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
+
+  // Listener de ativação de Assinatura Premium Pro via URL query parameters
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('success') === 'true') {
+      async function activatePremium() {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await supabase.auth.updateUser({
+              data: { premium: true }
+            });
+            setIsPremium(true);
+            alert("👑 Parabéns! Sua assinatura EduTrack Pro foi ativada com sucesso!");
+            // Limpa o parâmetro query da URL mantendo o histórico limpo
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        } catch (err) {
+          console.error("Erro ao processar ativação de assinatura:", err);
+        }
+      }
+      activatePremium();
+    }
+  }, []);
+
+  // Computa a contagem de tarefas criadas no mês/ano correntes (Limite de 20 para o Plano Padrão/Gratuito)
+  const now = new Date();
+  const currentMonthTasksCount = tasks.filter(t => {
+    if (!t.created_at) return false;
+    const taskDate = new Date(t.created_at);
+    return taskDate.getMonth() === now.getMonth() && taskDate.getFullYear() === now.getFullYear();
+  }).length;
 
   useEffect(() => {
     async function initSessionAndFetchData() {
@@ -40,6 +74,11 @@ export default function DashboardPage() {
         }
 
         setSession(session);
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.user_metadata) {
+          setIsPremium(!!user.user_metadata.premium);
+        }
 
         const { data: profile } = await supabase.from('user_profiles').select('*').eq('user_id', session.user.id).single();
         if (!profile) {
@@ -246,8 +285,44 @@ export default function DashboardPage() {
           </h1>
           <p className="text-gray-400 font-medium tracking-wide">Acompanhe seu desempenho metodicamente.</p>
         </div>
-        <div className="flex flex-col sm:flex-row items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-center gap-5">
           <XpHudBar completedTasks={completedTasks} />
+
+          {/* Achievement Badges UI with Premium dynamic aura & Staggered Entry animation */}
+          <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-2xl px-4 h-12 relative group select-none animate-in slide-in-from-bottom-3 fade-in duration-700 delay-150 fill-mode-both">
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Insígnias</span>
+            <div className="flex items-center gap-2">
+              {/* Badge 1: Foco Rápido (Zap) */}
+              <div 
+                className={`w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-500/5 border ${isPremium ? 'border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.25)]' : 'border-amber-500/20'} flex items-center justify-center text-amber-400 cursor-help transition-all duration-300 hover:scale-110 hover:shadow-[0_0_12px_rgba(245,158,11,0.5)] relative group/tooltip`}
+              >
+                <Zap className="w-3.5 h-3.5 fill-amber-500/10" />
+                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-[#0a0c14] border border-white/10 text-[9px] font-bold text-amber-400 rounded-md opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-50 shadow-xl">
+                  ⚡ Foco Rápido (IA)
+                </span>
+              </div>
+
+              {/* Badge 2: Sniper de Prazos (Target) */}
+              <div 
+                className={`w-7 h-7 rounded-lg bg-gradient-to-br from-[#3a86ff]/20 to-[#3a86ff]/5 border ${isPremium ? 'border-[#3a86ff]/50 shadow-[0_0_10px_rgba(58,134,255,0.25)]' : 'border-[#3a86ff]/20'} flex items-center justify-center text-[#3a86ff] cursor-help transition-all duration-300 hover:scale-110 hover:shadow-[0_0_12px_rgba(58,134,255,0.5)] relative group/tooltip`}
+              >
+                <Target className="w-3.5 h-3.5" />
+                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-[#0a0c14] border border-white/10 text-[9px] font-bold text-[#3a86ff] rounded-md opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-50 shadow-xl">
+                  🎯 Sniper de Prazos
+                </span>
+              </div>
+
+              {/* Badge 3: Zero Atrasos (ShieldCheck) */}
+              <div 
+                className={`w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 border ${isPremium ? 'border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.25)]' : 'border-emerald-500/20'} flex items-center justify-center text-emerald-400 cursor-help transition-all duration-300 hover:scale-110 hover:shadow-[0_0_12px_rgba(16,185,129,0.5)] relative group/tooltip`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-[#0a0c14] border border-white/10 text-[9px] font-bold text-emerald-400 rounded-md opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-50 shadow-xl">
+                  🛡️ Zero Atrasos
+                </span>
+              </div>
+            </div>
+          </div>
           <button
             onClick={handleGenerateReport}
             disabled={isGeneratingReport}
@@ -264,9 +339,13 @@ export default function DashboardPage() {
             <FolderOpen className="w-5 h-5 text-gray-400" />
             Nova Disciplina
           </button>
-          <button onClick={() => setIsTaskModalOpen(true)} className="w-full sm:w-auto h-12 px-6 rounded-xl bg-gradient-to-r from-[#3a86ff] to-[#2563eb] text-white hover:shadow-[0_0_30px_rgba(58,134,255,0.4)] hover:brightness-110 border border-[#3a86ff]/50 transition-all font-bold flex items-center justify-center gap-2">
+          <button 
+            onClick={() => setIsTaskModalOpen(true)} 
+            disabled={currentMonthTasksCount >= 20}
+            className="w-full sm:w-auto h-12 px-6 rounded-xl bg-gradient-to-r from-[#3a86ff] to-[#2563eb] text-white hover:shadow-[0_0_30px_rgba(58,134,255,0.4)] hover:brightness-110 border border-[#3a86ff]/50 transition-all font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             <Plus className="w-5 h-5" />
-            Nova Tarefa
+            {currentMonthTasksCount >= 20 ? "Limite Atingido" : "Nova Tarefa"}
           </button>
         </div>
       </header>
@@ -423,9 +502,10 @@ export default function DashboardPage() {
 
         <button
           onClick={() => setIsTaskModalOpen(true)}
-          className="mt-5 w-full py-3 rounded-xl border border-dashed border-white/10 text-gray-500 font-bold tracking-wide hover:text-white hover:border-[#3a86ff]/50 hover:bg-[#3a86ff]/10 transition-all text-xs uppercase"
+          disabled={currentMonthTasksCount >= 20}
+          className="mt-5 w-full py-3 rounded-xl border border-dashed border-white/10 text-gray-500 font-bold tracking-wide hover:text-white hover:border-[#3a86ff]/50 hover:bg-[#3a86ff]/10 transition-all text-xs uppercase disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-white/10 disabled:hover:text-gray-500"
         >
-          + Adicionar Demanda
+          {currentMonthTasksCount >= 20 ? "Limite de 20 tarefas/mês atingido" : "+ Adicionar Demanda"}
         </button>
       </div>
 
@@ -453,11 +533,35 @@ export default function DashboardPage() {
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Carga Horária (Horas)</label>
                 <input required type="number" min="1" value={newSubject.workload} onChange={(e) => setNewSubject({ ...newSubject, workload: e.target.value })} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-[#3a86ff] focus:ring-1 focus:ring-[#3a86ff] outline-none transition-all placeholder:text-gray-700" placeholder="60" />
               </div>
-              <div className="pt-6 flex gap-4">
-                <button type="button" onClick={() => setIsSubjectModalOpen(false)} className="flex-1 py-3 px-4 bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/10 rounded-xl text-gray-300 font-bold transition-all">Cancelar</button>
-                <button type="submit" disabled={submitting} className="flex-[2] py-3 px-4 bg-[#3a86ff] hover:bg-[#2563eb] shadow-[0_0_20px_rgba(58,134,255,0.3)] hover:shadow-[0_0_30px_rgba(58,134,255,0.5)] rounded-xl text-white font-extrabold transition-all disabled:opacity-50 flex justify-center items-center">
-                  {submitting ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : "Confirmar Criação"}
-                </button>
+              <div className="pt-6 flex flex-col gap-4">
+                <div className="flex gap-4">
+                  <button type="button" onClick={() => setIsSubjectModalOpen(false)} className="flex-1 py-3 px-4 bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/10 rounded-xl text-gray-300 font-bold transition-all">Cancelar</button>
+                  <button 
+                    type="submit" 
+                    disabled={submitting || subjects.length >= 3} 
+                    className="flex-[2] py-3 px-4 bg-[#3a86ff] hover:bg-[#2563eb] shadow-[0_0_20px_rgba(58,134,255,0.3)] hover:shadow-[0_0_30px_rgba(58,134,255,0.5)] rounded-xl text-white font-extrabold transition-all disabled:opacity-50 flex justify-center items-center cursor-pointer disabled:cursor-not-allowed text-sm"
+                  >
+                    {submitting ? (
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    ) : subjects.length >= 3 ? (
+                      "Limite de 3 atingido - Faça Upgrade"
+                    ) : (
+                      "Confirmar Criação"
+                    )}
+                  </button>
+                </div>
+                {subjects.length >= 3 && (
+                  <p className="text-center text-xs text-gray-400 mt-2 leading-relaxed">
+                    Você atingiu o limite de disciplinas do plano Padrão.{' '}
+                    <a 
+                      href="/dashboard/premium" 
+                      className="text-[#3a86ff] font-bold hover:underline"
+                    >
+                      Assine o plano Pro (R$ 9,90/mês)
+                    </a>{' '}
+                    e desbloqueie disciplinas ilimitadas!
+                  </p>
+                )}
               </div>
             </form>
           </div>
@@ -476,7 +580,23 @@ export default function DashboardPage() {
               </button>
             </div>
 
-            {subjects.length === 0 ? (
+            {currentMonthTasksCount >= 20 ? (
+              <div className="bg-amber-950/20 border border-amber-500/30 rounded-2xl p-6 text-amber-200/90 flex flex-col gap-4 text-center">
+                <div className="flex items-center gap-3 justify-center text-amber-400 font-extrabold">
+                  <AlertCircle className="w-6 h-6 shrink-0" />
+                  <span className="text-lg">Limite de Tarefas Atingido</span>
+                </div>
+                <p className="text-sm leading-relaxed text-gray-300">
+                  Você já criou <span className="text-white font-extrabold">{currentMonthTasksCount} tarefas</span> este mês. No plano Padrão o limite máximo é de 20 tarefas/mês.
+                </p>
+                <a 
+                  href="/dashboard/premium" 
+                  className="w-full py-3.5 bg-gradient-to-r from-[#3a86ff] to-[#2563eb] hover:from-[#2563eb] hover:to-[#1d4ed8] text-white font-extrabold rounded-xl shadow-[0_0_20px_rgba(58,134,255,0.35)] hover:shadow-[0_0_30px_rgba(58,134,255,0.5)] transition-all text-xs text-center block tracking-wider uppercase cursor-pointer"
+                >
+                  ✨ Upgrade para Pro (R$ 9,90/mês)
+                </a>
+              </div>
+            ) : subjects.length === 0 ? (
               <div className="bg-amber-900/10 border border-amber-500/20 rounded-xl p-5 text-amber-200 flex gap-4 mb-4">
                 <AlertCircle className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
                 <p className="text-sm font-medium leading-relaxed">Você precisa cadastrar uma <span className="font-bold text-amber-400">disciplina</span> primeiro para poder vincular esta tarefa.</p>

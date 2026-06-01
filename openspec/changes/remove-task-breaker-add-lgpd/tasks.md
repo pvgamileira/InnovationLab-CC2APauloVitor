@@ -1,4 +1,4 @@
-# Tasks: Remove Task Breaker & Add LGPD Consent
+# Tarefas: Remove Task Breaker & Add LGPD Consent
 
 ## 1. Clean Dashboard
 - [x] Open `app/dashboard/page.jsx`.

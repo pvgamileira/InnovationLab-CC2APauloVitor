@@ -1,4 +1,4 @@
-# Proposal: Implement Global Cookie Consent Banner
+# Proposta: Implement Global Cookie Consent Banner
 
 ## Problem
 In order to comply with the General Data Protection Law (LGPD), the application must explicitly inform users about the use of cookies and local storage for performance metrics and AI enhancement before they navigate the site extensively. Currently, the platform lacks a mechanism to capture and respect this initial consent.

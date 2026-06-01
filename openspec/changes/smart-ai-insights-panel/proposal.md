@@ -1,8 +1,8 @@
-## Why
+## Por que
 
 While the EduTrack AI platform now aggregates data and offers visual completion metrics (via Recharts), it lacks a direct, actionable summary of what the student should do next. The `gemini-insights-api` backend is already functional. We now need to connect the frontend to surface these AI-driven strategic insights directly on the Analytics dashboard. This ensures students receive personalized, immediate guidance without leaving the primary analytics view.
 
-## What Changes
+## O que muda
 
 - Update `app/dashboard/estatisticas/page.jsx` to fetch and display AI insights.
 - Add an API call to `/api/gemini-insights` triggered upon component mount (using `useEffect`).
@@ -10,15 +10,15 @@ While the EduTrack AI platform now aggregates data and offers visual completion 
 - Implement a glowing skeleton loading state for the card while the AI data is being fetched.
 - Strictly preserve all existing Recharts pie charts and Kanban board elements on the page.
 
-## Capabilities
+## Funcionalidades
 
-### New Capabilities
+### Novas Funcionalidades
 - `smart-ai-insights-panel`: Display of AI-generated strategic insights within the Analytics dashboard, complete with loading states and modern UI styling.
 
-### Modified Capabilities
+### Funcionalidades Modificadas
 - No existing capabilities are modified at the requirements level.
 
-## Impact
+## Impacto
 
 - **Frontend:** Modification of `app/dashboard/estatisticas/page.jsx` to include new React state (`insights`, `loading`, `error`), side-effects (`useEffect`), and a new UI section.
 - **Dependencies:** Uses existing `lucide-react` icons. Relies on the newly created `/api/gemini-insights` endpoint.

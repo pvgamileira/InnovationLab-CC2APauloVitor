@@ -1,4 +1,4 @@
-# Proposal: Fix Notebook Markdown and Settings Logic
+# Proposta: Fix Notebook Markdown and Settings Logic
 
 ## Problem
 Currently, the Notebook Copilot feature renders AI responses as plain text, exposing raw markdown symbols (`#`, `*`) which ruins the user experience. Additionally, the Settings page is incomplete: the "Delete Account" button does not function properly, and the "Help Center" tab lacks useful information about how the platform's core features (Mentor IA and Kanban) operate.

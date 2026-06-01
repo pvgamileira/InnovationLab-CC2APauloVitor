@@ -1,4 +1,4 @@
-# Tasks: Fix Gemini API Route
+# Tarefas: Fix Gemini API Route
 
 ## 1. Update API Route Configuration
 - [x] Open `app/api/gemini-insights/route.js`.

@@ -1,4 +1,4 @@
-# Proposal: Fix Gemini API Route with Dynamic Rendering and Verbose Logging
+# Proposta: Fix Gemini API Route with Dynamic Rendering and Verbose Logging
 
 ## Problem
 The Gemini API route (`app/api/gemini-insights/route.js`) is throwing a 500 error. The root cause is likely static caching from Next.js App Router, or a failure during model instantiation. Furthermore, the frontend (`components/GlobalMentor.jsx`) swallows the actual error details, showing a generic "Falha no motor da IA" message.

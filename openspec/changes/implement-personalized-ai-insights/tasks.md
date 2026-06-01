@@ -1,4 +1,4 @@
-# Tasks: Implement Personalized AI Insights
+# Tarefas: Implement Personalized AI Insights
 
 ## 1. Update API Route
 - [x] Open `app/api/gemini-insights/route.js`.

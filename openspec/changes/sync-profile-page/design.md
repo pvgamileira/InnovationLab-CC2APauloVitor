@@ -1,16 +1,16 @@
-# Design: Sync Profile Page
+# Design: Sincronizar Página de Perfil
 
-## Component: Profile Page
-**File**: `app/dashboard/perfil/page.jsx`
+## Componente: Página de Perfil
+**Arquivo:** `app/dashboard/perfil/page.jsx`
 
-### Data Fetching
-In the `fetchProfileData` function, right after validating the session, perform a `.select('*').eq('user_id', session.user.id).single()` on `user_profiles`.
-- If data exists, map it to `profileMeta` and `editForm`.
-- If not, use sensible defaults.
-- The `profileMeta` state should be structured as: `{ name: '', occupation: '', course: '', institution: '', study_shift: '' }`.
+### Busca de Dados (Data Fetching)
+Na função `fetchProfileData`, logo após validar a sessão, execute uma consulta `.select('*').eq('user_id', session.user.id).single()` na tabela `user_profiles`.
+- Se os dados existirem, mapeie-os para `profileMeta` e `editForm`.
+- Se não existirem, utilize valores padrão sensíveis.
+- O estado de `profileMeta` deve ser estruturado como: `{ name: '', occupation: '', course: '', institution: '', study_shift: '' }`.
 
-### Save Logic
-In `handleSaveProfile`, instead of calling `supabase.auth.updateUser`, perform an `upsert` to `user_profiles`:
+### Lógica de Salvamento (Save Logic)
+No `handleSaveProfile`, em vez de chamar `supabase.auth.updateUser`, execute uma operação de `upsert` na tabela `user_profiles`:
 ```javascript
 const { error } = await supabase.from('user_profiles').upsert([
     {
@@ -25,7 +25,7 @@ const { error } = await supabase.from('user_profiles').upsert([
 ]);
 ```
 
-### UI Adjustments
-- Update the display section (lines ~198-200) to show the new fields using icons like `Briefcase` (Occupation), `GraduationCap` (Course / Institution), and `Clock` (Study Shift).
-- Update the `<form>` inside the edit modal to use the correct fields and add `<select>` dropdowns for `study_shift` and `occupation` matching the Onboarding Modal.
-- Maintain existing `lucide-react` imports and glassmorphism styling (`bg-[#05070e]/80`, `backdrop-blur-xl`, `border-white/5`).
+### Ajustes na Interface (UI)
+- Atualizar a seção de exibição (linhas ~198-200) para mostrar os novos campos utilizando ícones como `Briefcase` (Ocupação), `GraduationCap` (Curso / Instituição) e `Clock` (Turno).
+- Atualizar o `<form>` dentro do modal de edição para usar os campos corretos e adicionar menus dropdown `<select>` para `study_shift` e `occupation` correspondentes ao Modal de Onboarding.
+- Manter as importações do `lucide-react` existentes e a estilização de glassmorphism (`bg-[#05070e]/80`, `backdrop-blur-xl`, `border-white/5`).

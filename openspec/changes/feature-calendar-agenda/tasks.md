@@ -1,4 +1,4 @@
-## 1. Setup & Data Fetching
+## 1. Configuração & Data Fetching
 
 - [x] 1.1 Create the directory structure `app/dashboard/agenda` and initialize `page.jsx` with the `"use client"` directive.
 - [x] 1.2 Implement the Supabase data fetching logic: retrieve `academic_tasks` and `subjects` for the authenticated user via `useEffect()`.

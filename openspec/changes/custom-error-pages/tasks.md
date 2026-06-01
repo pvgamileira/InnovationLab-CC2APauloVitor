@@ -1,4 +1,4 @@
-# Tasks: Implement Custom 404 and Error Pages
+# Tarefas: Implement Custom 404 and Error Pages
 
 ## 1. Create the 404 Page
 - [x] Create `app/not-found.jsx`.

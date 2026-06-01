@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles, Layout, BookOpen, HeartPulse } from 'lucide-react';
+import { ArrowRight, Sparkles, Layout, BookOpen, HeartPulse, Check, Minus } from 'lucide-react';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -72,11 +72,17 @@ export default function LandingPage() {
           <motion.p variants={itemVariants} className="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
             O ecossistema definitivo para estudantes de tecnologia organizarem tarefas, notas e desempenho com mentoria proativa.
           </motion.p>
-          <motion.div variants={itemVariants}>
-            <Link href="/auth" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-[#3a86ff] to-[#2563eb] text-white font-bold rounded-xl shadow-[0_0_30px_rgba(58,134,255,0.4)] hover:shadow-[0_0_50px_rgba(58,134,255,0.6)] hover:scale-105 transition-all duration-300">
+          <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/auth" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-[#3a86ff] to-[#2563eb] text-white font-bold rounded-xl shadow-[0_0_30px_rgba(58,134,255,0.4)] hover:shadow-[0_0_50px_rgba(58,134,255,0.6)] hover:scale-105 transition-all duration-300 w-full sm:w-auto justify-center">
               Começar Agora
               <ArrowRight className="w-5 h-5" />
             </Link>
+            <a 
+              href="#pricing" 
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white font-bold rounded-xl hover:scale-105 transition-all duration-300 w-full sm:w-auto"
+            >
+              Ver Planos
+            </a>
           </motion.div>
         </motion.div>
 
@@ -137,6 +143,119 @@ export default function LandingPage() {
             </div>
           </motion.div>
         </motion.div>
+
+        {/* Seção Transparente de Preços (Monetização) */}
+        <motion.section 
+          id="pricing"
+          className="w-full mt-32 py-16 border-t border-white/5 relative z-10"
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+        >
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent mb-4">
+              Escolha o seu nível de produtividade
+            </h2>
+            <p className="text-gray-400 text-sm">
+              Comece sem custos ou impulsione seu aprendizado com inteligência artificial ilimitada.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch px-4">
+            {/* Card Plano Gratuito */}
+            <div className="bg-white/[0.02] backdrop-blur-md border border-white/5 rounded-3xl p-8 flex flex-col justify-between hover:border-white/10 hover:bg-white/[0.03] transition-all duration-300">
+              <div>
+                <span className="text-gray-500 text-xs font-bold uppercase tracking-wider">Padrão</span>
+                <h3 className="text-xl font-bold mt-2">Plano Gratuito</h3>
+                <p className="text-gray-400 text-xs mt-2">Acesso aos recursos essenciais de produtividade.</p>
+
+                <div className="my-6">
+                  <span className="text-3xl font-extrabold">R$ 0</span>
+                  <span className="text-gray-500 text-xs"> / mês</span>
+                </div>
+
+                <ul className="space-y-3.5 text-left border-t border-white/5 pt-6">
+                  <li className="flex items-center gap-3 text-gray-300 text-xs">
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>Até 3 Disciplinas simultâneas</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-gray-300 text-xs">
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>Mapa de Calor Básico (Até Tier Ouro)</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-gray-300 text-xs">
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>5 Consultas IA/dia</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-gray-500 text-xs">
+                    <Minus className="w-4 h-4 text-gray-600 shrink-0" />
+                    <span className="line-through">Disciplinas e Kanban ilimitados</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-gray-500 text-xs">
+                    <Minus className="w-4 h-4 text-gray-600 shrink-0" />
+                    <span className="line-through">Tiers Platina e Diamante (Auras)</span>
+                  </li>
+                </ul>
+              </div>
+
+              <Link 
+                href="/auth" 
+                className="w-full mt-10 py-3.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold rounded-xl transition-all text-xs text-center block"
+              >
+                Começar Grátis
+              </Link>
+            </div>
+
+            {/* Card Plano Pro */}
+            <div className="bg-black/40 backdrop-blur-lg border border-[#3a86ff]/50 rounded-3xl p-8 flex flex-col justify-between hover:border-[#3a86ff] transition-all duration-300 shadow-[0_0_45px_rgba(58,134,255,0.1)] relative overflow-hidden group">
+              <div className="absolute top-0 right-6 -translate-y-1/2 bg-[#3a86ff] text-white px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wider">
+                MAIS POPULAR
+              </div>
+
+              <div>
+                <span className="text-[#3a86ff] text-xs font-bold uppercase tracking-wider">Premium</span>
+                <h3 className="text-xl font-bold mt-2">EduTrack Pro</h3>
+                <p className="text-gray-400 text-xs mt-2">Mentoria de estudos avançada e sem interrupções.</p>
+
+                <div className="my-6">
+                  <span className="text-3xl font-extrabold text-[#3a86ff]">R$ 9,90</span>
+                  <span className="text-gray-400 text-xs"> / mês</span>
+                </div>
+
+                <ul className="space-y-3.5 text-left border-t border-[#3a86ff]/20 pt-6">
+                  <li className="flex items-center gap-3 text-gray-200 text-xs">
+                    <Check className="w-4 h-4 text-[#3a86ff] shrink-0" />
+                    <span className="font-semibold">Disciplinas e Kanban Ilimitados</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-gray-200 text-xs">
+                    <Check className="w-4 h-4 text-[#3a86ff] shrink-0" />
+                    <span className="font-semibold">IA Generativa Ilimitada</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-gray-200 text-xs">
+                    <Check className="w-4 h-4 text-[#3a86ff] shrink-0" />
+                    <span>Tiers Platina e Diamante (Auras)</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-gray-200 text-xs">
+                    <Check className="w-4 h-4 text-[#3a86ff] shrink-0" />
+                    <span>Acesso Antecipado a Novas Features</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-gray-200 text-xs">
+                    <Check className="w-4 h-4 text-[#3a86ff] shrink-0" />
+                    <span>Suporte VIP Prioritário</span>
+                  </li>
+                </ul>
+              </div>
+
+              <Link 
+                href="/auth" 
+                className="w-full mt-10 py-3.5 bg-gradient-to-r from-[#3a86ff] to-[#2563eb] text-white font-extrabold rounded-xl shadow-md hover:shadow-lg transition-all text-xs text-center block"
+              >
+                Conhecer o Pro
+              </Link>
+            </div>
+          </div>
+        </motion.section>
       </main>
 
       {/* Footer */}

@@ -1,12 +1,12 @@
-# Proposal: Create Premium Landing Page with Bento Grid
+# Proposta: Criar Landing Page Premium com Bento Grid
 
-## Problem
-The current landing page (`app/page.jsx`) is somewhat plain and uses a split-screen design that relies on a 3D Spline placeholder which might be heavy or incomplete. It doesn't clearly articulate the core AI features of EduTrack AI.
+## Problema
+A landing page atual (`app/page.jsx`) é um pouco simples e utiliza um design de tela dividida que depende de um placeholder 3D do Spline, o qual pode se tornar pesado ou incompleto. Além disso, ela não articula claramente as funcionalidades principais de IA do EduTrack AI.
 
-## Proposed Solution
-Redesign the landing page into a high-conversion, modern "Linear-style" page featuring a deep dark theme (`#02040a`) with a subtle grid overlay. The main hero section will introduce the platform, followed immediately by a visually striking "Bento Grid" section that highlights the core features: Mentor IA, Kanban Inteligente, Caderno Copiloto, and Insights de Burnout.
+## Solução Proposta
+Redesenhar a landing page em uma página moderna de alta conversão no estilo "Linear", apresentando um tema escuro profundo (`#02040a`) com uma sobreposição sutil de grade (grid). A seção principal do hero apresentará a plataforma, seguida imediatamente por uma seção visualmente marcante de "Bento Grid" que destaca as funcionalidades principais: Mentor IA, Kanban Inteligente, Caderno Copiloto e Insights de Burnout.
 
-## Benefits
-- Drastically improves first impressions and user conversion.
-- Clearly communicates value propositions via a modern, scannable Bento Grid.
-- Fully responsive, fast-loading, and uses native Tailwind CSS and Framer Motion animations without heavy 3D dependencies.
+## Benefícios
+- Melhora drasticamente a primeira impressão e a conversão de usuários.
+- Comunica de forma clara as propostas de valor por meio de um Bento Grid moderno e fácil de escanear.
+- Totalmente responsivo, de carregamento rápido e utiliza Tailwind CSS nativo e animações do Framer Motion sem dependências pesadas de 3D.

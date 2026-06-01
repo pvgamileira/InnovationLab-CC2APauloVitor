@@ -1,4 +1,4 @@
-# Tasks: Refactor PDF Generation and Add Security
+# Tarefas: Refactor PDF Generation and Add Security
 
 ## 1. Install Dependencies
 - [x] Install `jspdf` and `jspdf-autotable` via npm.

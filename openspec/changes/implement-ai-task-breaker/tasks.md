@@ -1,4 +1,4 @@
-# Tasks: Implement AI Task Breaker
+# Tarefas: Implement AI Task Breaker
 
 ## 1. Create API Route
 - [x] Create `app/api/gemini-task-breaker/route.js`.

@@ -1,8 +1,8 @@
-## Why
+## Por que
 
 To increase user engagement and retention by introducing a gamification system. By rewarding users with XP and levels based on their completed tasks, we provide immediate visual feedback on their progress, making the platform more motivating to use. 
 
-## What Changes
+## O que muda
 
 - Add a new Gamification XP Widget at the top of the Dashboard.
 - Calculate total XP using the formula: `completedTasks * 50`.
@@ -12,15 +12,15 @@ To increase user engagement and retention by introducing a gamification system. 
 - All text must be in Portuguese (pt-BR).
 - No changes to routing, other pages, or PDF logic.
 
-## Capabilities
+## Funcionalidades
 
-### New Capabilities
+### Novas Funcionalidades
 - `gamification-xp-widget`: Renders a top-level widget on the dashboard that tracks user XP and Level based on task completion, using premium glassmorphism UI.
 
-### Modified Capabilities
+### Funcionalidades Modificadas
 
 
-## Impact
+## Impacto
 
 - `app/dashboard/page.jsx` (or the equivalent dashboard file): Will be modified to include the new widget component.
 - Visual elements using modern, strict dark mode guidelines (Rich Black, Metallic Blue).

@@ -1,4 +1,4 @@
-# Tasks: Create Legal Pages
+# Tarefas: Create Legal Pages
 
 ## 1. Create Privacy Policy Page
 - [x] Create `app/privacidade/page.jsx`.

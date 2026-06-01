@@ -1,15 +1,15 @@
-# Tasks: Implement Smart Onboarding Modal
+# Tarefas: Implementar Modal de Onboarding Inteligente
 
-## 1. Create OnboardingModal Component
-- [x] Create `components/OnboardingModal.jsx`.
-- [x] Implement the UI with `lucide-react` icons and glassmorphism styling.
-- [x] Set up state for all 5 form fields.
-- [x] Implement Supabase `upsert` logic inside `handleSubmit`.
-- [x] Handle loading state and errors gracefully.
+## 1. Criar o Componente OnboardingModal
+- [x] Criar o arquivo `components/OnboardingModal.jsx`.
+- [x] Implementar a interface (UI) com ícones da biblioteca `lucide-react` e estilização de glassmorphism.
+- [x] Configurar o estado para todos os 5 campos do formulário.
+- [x] Implementar a lógica de `upsert` do Supabase dentro de `handleSubmit`.
+- [x] Tratar o estado de carregamento (loading) e erros com elegância.
 
-## 2. Integrate into Dashboard Page
-- [x] Open `app/dashboard/page.jsx`.
-- [x] Import the new `OnboardingModal` component.
-- [x] Add the `needsOnboarding` state variable.
-- [x] Query the `user_profiles` table inside the data fetching flow and set `needsOnboarding(true)` if no profile is found.
-- [x] Render the `<OnboardingModal />` conditionally at the bottom of the component.
+## 2. Integrar na Página do Dashboard
+- [x] Abrir o arquivo `app/dashboard/page.jsx`.
+- [x] Importar o novo componente `OnboardingModal`.
+- [x] Adicionar a variável de estado `needsOnboarding`.
+- [x] Consultar a tabela `user_profiles` dentro do fluxo de busca de dados e definir `needsOnboarding(true)` se nenhum perfil for encontrado.
+- [x] Renderizar condicionalmente o componente `<OnboardingModal />` na parte inferior do componente.

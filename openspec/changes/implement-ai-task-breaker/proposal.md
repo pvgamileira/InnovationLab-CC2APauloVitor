@@ -1,4 +1,4 @@
-# Proposal: Implement AI Task Breaker in Kanban
+# Proposta: Implement AI Task Breaker in Kanban
 
 ## Problem
 Currently, users may add broad or complex tasks to their Kanban "Backlog". It can be overwhelming to start a big task. 

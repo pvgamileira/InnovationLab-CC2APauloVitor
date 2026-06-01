@@ -1,5 +1,6 @@
 'use client';
 
+import { supabase } from '@/lib/supabase';
 import {
   Circle, CheckCircle2, Clock, Calendar, AlertCircle,
   ChevronLeft, ChevronRight, Loader2
@@ -169,6 +170,40 @@ export default function KanbanBoard({ tasks = [], moveTask }) {
     return acc;
   }, {});
 
+  const handleMoveTaskWithGamification = async (taskId, directionOrStatus) => {
+    let finalStatus = directionOrStatus;
+    const task = tasks.find(t => t.id.toString() === taskId.toString());
+    
+    if (task && (directionOrStatus === 'forward' || directionOrStatus === 'backward')) {
+      const currentIndex = STATUS_ORDER.indexOf(task.status || 'pending');
+      const nextIndex = directionOrStatus === 'forward' ? currentIndex + 1 : currentIndex - 1;
+      finalStatus = STATUS_ORDER[nextIndex];
+    }
+
+    const wasAlreadyCompleted = task?.status === 'completed';
+
+    moveTask(taskId, directionOrStatus);
+
+    if (finalStatus === 'completed' && !wasAlreadyCompleted) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const currentXP = user.user_metadata?.xp || 0;
+          const newXP = currentXP + 50;
+          const newLevel = Math.floor(newXP / 500) + 1;
+          
+          await supabase.auth.updateUser({
+            data: { xp: newXP, level: newLevel }
+          });
+          
+          alert("🎉 Você ganhou +50 XP!");
+        }
+      } catch (err) {
+        console.error("Erro ao atualizar XP:", err);
+      }
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
       {COLUMNS.map((col, idx) => (
@@ -177,7 +212,7 @@ export default function KanbanBoard({ tasks = [], moveTask }) {
           column={col}
           tasks={grouped[col.key] || []}
           colIndex={idx}
-          moveTask={moveTask}
+          moveTask={handleMoveTaskWithGamification}
         />
       ))}
     </div>

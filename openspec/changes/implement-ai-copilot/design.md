@@ -1,6 +1,6 @@
 # Design: Implement AI Copilot
 
-## Component: API Route
+## Componente: API Route
 **File**: `app/api/gemini-copilot/route.js`
 - Must include `export const dynamic = 'force-dynamic';`.
 - Authenticate via Supabase Authorization header (`createClient` passing the header).
@@ -10,7 +10,7 @@
 - Use the System Prompt: "Atue como um tutor acadêmico sênior. O aluno enviou anotações de aula brutas. 1) Corrija erros e reescreva o texto em um resumo estruturado por tópicos. 2) Crie 3 perguntas curtas de revisão (Flashcards) no final. Retorne em Markdown limpo."
 - Return `{ content: generatedText }` as JSON (status 200) or `{ error: err.message }` (status 500).
 
-## Component: Frontend (Caderno Page)
+## Componente: Frontend (Caderno Page)
 **File**: `app/dashboard/caderno/page.jsx`
 - Add UI state: `isCopilotLoading` (boolean) and `aiResponse` (string or null).
 - In the Editor Toolbar (`<div className="px-6 py-4 border-b border-white/5...">`), add an "Aprimorar com IA" button.

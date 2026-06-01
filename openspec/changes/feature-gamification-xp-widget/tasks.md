@@ -1,4 +1,4 @@
-## 1. Setup
+## 1. Configuração
 
 - [x] 1.1 Verify if `lucide-react` is installed in `package.json`, and install it if necessary.
 

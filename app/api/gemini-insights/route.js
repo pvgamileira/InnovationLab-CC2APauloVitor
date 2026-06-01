@@ -1,11 +1,20 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { rateLimit } from '../../../lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request) {
   try {
+    // 0. Limitador de Taxa (Anti-Spam / DDoS)
+    const rawIp = request.headers.get('x-forwarded-for') || '127.0.0.1';
+    const ip = rawIp.split(',')[0].trim();
+    const { success } = rateLimit(ip, 5, 60000);
+    if (!success) {
+      return NextResponse.json({ error: 'Limite diário atingido no plano Padrão. Faça o upgrade para o Pro (R$ 9,90) e desbloqueie a IA ilimitada!' }, { status: 429 });
+    }
+
     // 1. Valida o Token do Usuário
     const authHeader = request.headers.get('Authorization');
     if (!authHeader) {

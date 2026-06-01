@@ -1,11 +1,20 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { rateLimit } from '../../../lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request) {
   try {
+    // 0. Limitador de Taxa (Anti-Spam / DDoS)
+    const rawIp = request.headers.get('x-forwarded-for') || '127.0.0.1';
+    const ip = rawIp.split(',')[0].trim();
+    const { success } = rateLimit(ip, 5, 60000);
+    if (!success) {
+      return NextResponse.json({ error: 'Muitas requisições. Bloqueio anti-spam ativado.' }, { status: 429 });
+    }
+
     const authHeader = request.headers.get('Authorization');
     if (!authHeader) {
       return NextResponse.json({ error: 'Token ausente' }, { status: 401 });

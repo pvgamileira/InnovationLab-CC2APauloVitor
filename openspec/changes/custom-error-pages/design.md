@@ -1,6 +1,6 @@
 # Design: Custom 404 and Error Pages
 
-## Component: 404 Not Found Page
+## Componente: 404 Not Found Page
 **File**: `app/not-found.jsx`
 - **Theme**: Dark background (`bg-[#02040a]`) with a subtle blue/indigo ambient glow.
 - **Icon**: `MapPinOff` from `lucide-react`.
@@ -10,7 +10,7 @@
   - Subtext: "Parece que você se perdeu no ciberespaço acadêmico."
 - **Action**: A Next.js `<Link>` pointing to `/dashboard` styled as a primary glowing button ("Voltar para o Dashboard").
 
-## Component: 500 Global Error Page
+## Componente: 500 Global Error Page
 **File**: `app/error.jsx`
 - **Directive**: Must begin with `"use client";`.
 - **Props**: Receives `({ error, reset })`.

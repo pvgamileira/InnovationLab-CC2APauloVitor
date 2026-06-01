@@ -1,4 +1,4 @@
-# Tasks: Implement Global Cookie Consent Banner
+# Tarefas: Implement Global Cookie Consent Banner
 
 ## 1. Create CookieBanner Component
 - [x] Create `components/CookieBanner.jsx`.

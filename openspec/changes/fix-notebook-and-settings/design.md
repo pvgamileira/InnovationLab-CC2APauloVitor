@@ -1,12 +1,12 @@
 # Design: Fix Notebook Markdown & Settings Logic
 
-## Component: Notebook Page
+## Componente: Notebook Page
 **File**: `app/dashboard/caderno/page.jsx`
 - Import `ReactMarkdown` from `react-markdown`.
 - Replace the simple `<pre>` or `<p>` tag that renders the `result` state with a `<ReactMarkdown>` component.
 - Apply a custom `components` prop to `ReactMarkdown` to style standard HTML tags using Tailwind (e.g., `h1`, `h2`, `h3` for headers; `ul`, `ol`, `li` for lists; `strong` for bold text) ensuring they match the `#0a0c14` dark theme and `text-gray-300` base colors.
 
-## Component: Settings Page
+## Componente: Settings Page
 **File**: `app/dashboard/configuracoes/page.jsx`
 
 ### 1. Delete Account Logic

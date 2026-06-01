@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import ActivityHeatmap from '@/components/ActivityHeatmap';
 import {
-  BarChart3, TrendingUp, Target, Clock, BrainCircuit, CheckCircle2, AlertCircle, Sparkles
+  BarChart3, TrendingUp, Target, Clock, BrainCircuit, CheckCircle2, AlertCircle, Sparkles, Activity
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell
+  PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
 
 export default function EstatisticasPage() {
@@ -18,7 +19,8 @@ export default function EstatisticasPage() {
     completionRate: 0,
     totalWorkload: 0,
     subjectData: [],
-    workloadData: []
+    workloadData: [],
+    timelineData: []
   });
 
   const [insightsData, setInsightsData] = useState(null);
@@ -69,13 +71,37 @@ export default function EstatisticasPage() {
           value: s.workload || 0
         })).filter(s => s.value > 0);
 
+        // Dados para o Gráfico de Linha (Timeline de Prazos)
+        const timelineMap = {};
+        tasks.forEach(t => {
+          if (t.due_date) {
+            const [year, month, dayStr] = t.due_date.split('-');
+            if (dayStr && month) {
+              const formattedDate = `${dayStr.substring(0,2)}/${month}`;
+              if (!timelineMap[formattedDate]) {
+                timelineMap[formattedDate] = 0;
+              }
+              timelineMap[formattedDate] += 1;
+            }
+          }
+        });
+
+        const timelineData = Object.keys(timelineMap)
+          .map(dateStr => ({ date: dateStr, Tarefas: timelineMap[dateStr] }))
+          .sort((a, b) => {
+            const [dayA, monthA] = a.date.split('/');
+            const [dayB, monthB] = b.date.split('/');
+            return new Date(2026, parseInt(monthA)-1, parseInt(dayA)) - new Date(2026, parseInt(monthB)-1, parseInt(dayB));
+          });
+
         setMetrics({
           totalTasks: total,
           completedTasks: completed,
           completionRate: rate,
           totalWorkload: workload,
           subjectData: Object.values(subjectDataMap),
-          workloadData: workloadData
+          workloadData: workloadData,
+          timelineData: timelineData
         });
 
       } catch (error) {
@@ -227,6 +253,23 @@ export default function EstatisticasPage() {
         </div>
       </div>
 
+      {/* Consistência Acadêmica (Heatmap) */}
+      <div className="bg-[#05070e]/80 backdrop-blur-xl border border-white/5 rounded-3xl p-6 lg:p-8 mb-10 shadow-2xl relative overflow-hidden">
+        <div className="absolute right-0 top-0 w-64 h-64 bg-green-500/5 rounded-full blur-[80px] pointer-events-none"></div>
+        <div className="flex items-center gap-3 mb-8 relative z-10">
+          <div className="w-10 h-10 bg-green-500/10 border border-green-500/20 rounded-xl flex items-center justify-center text-green-500">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-gray-100 tracking-tight">Consistência Acadêmica</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Seu histórico de tarefas concluídas nos últimos 30 dias</p>
+          </div>
+        </div>
+        <div className="relative z-10 overflow-x-auto pb-2">
+           <ActivityHeatmap />
+        </div>
+      </div>
+
       {/* Main Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -321,6 +364,43 @@ export default function EstatisticasPage() {
           </div>
         </div>
 
+      </div>
+
+      {/* Radar de Sobrecarga (Prazos) */}
+      <div className="bg-[#05070e]/80 backdrop-blur-xl border border-white/5 rounded-3xl p-6 mt-8 shadow-2xl">
+        <div className="flex items-center gap-3 mb-8">
+          <Activity className="w-5 h-5 text-[#f59e0b]" />
+          <h2 className="text-lg font-bold text-gray-200">Radar de Sobrecarga (Prazos)</h2>
+        </div>
+        
+        {metrics.timelineData.length > 0 ? (
+          <div className="h-[250px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={metrics.timelineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                <XAxis dataKey="date" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#02040a', borderColor: '#333', borderRadius: '12px', color: '#fff' }}
+                  itemStyle={{ color: '#fff' }}
+                  cursor={{ stroke: '#ffffff10', strokeWidth: 2 }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="Tarefas" 
+                  stroke="#f59e0b" 
+                  strokeWidth={3} 
+                  dot={{ fill: '#f59e0b', strokeWidth: 2 }} 
+                  activeDot={{ r: 6 }} 
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <div className="h-[250px] flex items-center justify-center text-gray-500 font-medium">
+            Nenhum prazo próximo detectado
+          </div>
+        )}
       </div>
     </div>
   );

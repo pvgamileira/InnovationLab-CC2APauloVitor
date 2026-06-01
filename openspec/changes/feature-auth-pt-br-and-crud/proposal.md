@@ -1,24 +1,24 @@
-## Why
+## Por que
 
-To transform the static prototype into a fully functional and secure application, we must implement Authentication so users can securely access their isolated data as defined by our RLS policies. Simultaneously, to localize the platform for the target audience, the entire Dashboard must be translated to Brazilian Portuguese (pt-BR). Finally, users need the ability to actually populate their dashboard via functional CRUD modals. 
+Para transformar o protótipo estático em uma aplicação totalmente funcional e segura, devemos implementar Autenticação para que os usuários possam acessar com segurança seus dados isolados, conforme definido pelas nossas políticas de RLS. Simultaneamente, para localizar a plataforma para o público-alvo, todo o Dashboard deve ser traduzido para o Português Brasileiro (pt-BR). Por fim, os usuários precisam da capacidade de realmente preencher seu dashboard por meio de modais de CRUD funcionais.
 
-## What Changes
+## O que muda
 
-- **Authentication:** Implementation of an `/auth` (or `/login`) page utilizing pure JavaScript Next.js and `@supabase/supabase-js` to handle Email/Password Sign-Up and Sign-In operations.
-- **PT-BR Translation & Polish:** Complete translation of all `/dashboard` UI text strings to Portuguese (pt-BR). Strict enforcement of iconography: all native OS emojis will be purged and replaced with SVG icons (e.g., Lucide React). The UI will rigorously maintain the "Rich Black" and Glassmorphism styling.
-- **CRUD Actions:** Architecture of modal forms triggered by the "Nova Disciplina" and "Nova Tarefa" buttons. These forms will execute explicit `INSERT` operations into the Supabase `subjects` and `academic_tasks` tables, strictly attaching the authenticated `user.id` to satisfy RLS constraints.
+- **Autenticação:** Implementação de uma página `/auth` (ou `/login`) utilizando Next.js com Pure JavaScript e `@supabase/supabase-js` para lidar com operações de cadastro (Sign-Up) e login (Sign-In) via E-mail/Senha.
+- **Tradução e Polimento em PT-BR:** Tradução completa de todas as strings de texto da interface do usuário do `/dashboard` para o português (pt-BR). Aplicação rigorosa da iconografia: todos os emojis nativos do sistema operacional serão eliminados e substituídos por ícones SVG (ex: Lucide React). A interface manterá rigorosamente a estilização de "Rich Black" e Glassmorphism.
+- **Ações de CRUD:** Arquitetura de formulários modais acionados pelos botões "Nova Disciplina" e "Nova Tarefa". Esses formulários executarão operações explícitas de `INSERT` nas tabelas `subjects` e `academic_tasks` do Supabase, anexando estritamente o `user.id` autenticado para satisfazer as restrições de RLS.
 
-## Capabilities
+## Funcionalidades
 
-### New Capabilities
-- `authentication`: The capability to register, authenticate, and manage user sessions securely.
-- `crud-operations`: The capability to insert, update, and manage subject and task records seamlessly via modal interfaces.
+### Novas Funcionalidades
+- `authentication`: A capacidade de registrar, autenticar e gerenciar sessões de usuários com segurança.
+- `crud-operations`: A capacidade de inserir, atualizar e gerenciar registros de disciplinas e tarefas de forma integrada por meio de interfaces modais.
 
-### Modified Capabilities
-- `premium-dashboard-ui`: Modified to reflect PT-BR localization and strict SVG-based iconography, stripping all OS emojis while preserving aesthetic layout goals.
+### Funcionalidades Modificadas
+- `premium-dashboard-ui`: Modificada para refletir a localização em PT-BR e iconografia estritamente baseada em SVG, removendo todos os emojis nativos enquanto preserva as metas estéticas do layout.
 
-## Impact
+## Impacto
 
-- **Database:** Supabase Auth will be actively leveraged; DB inserts will now dynamically reflect the active user identity.
-- **Frontend:** A new `/auth` routing layer will be established. The `/dashboard` will see significant DOM additions including form state management and modals.
-- **Security:** RLS will move from theoretical isolation to active use since requests will finally carry real Supabase Authentication session tokens.
+- **Banco de Dados:** O Supabase Auth será ativamente utilizado; inserções no banco de dados agora refletirão dinamicamente a identidade do usuário ativo.
+- **Frontend:** Uma nova camada de roteamento `/auth` será estabelecida. O `/dashboard` receberá adições significativas no DOM, incluindo gerenciamento de estado de formulários e modais.
+- **Segurança:** O RLS passará de um isolamento teórico para o uso ativo, uma vez que as requisições finalmente carregarão tokens reais de sessão do Supabase Authentication.

@@ -1,4 +1,4 @@
-# Proposal: Refactor PDF Generation and Add Security Rate Limiting
+# Proposta: Refactor PDF Generation and Add Security Rate Limiting
 
 ## Problem
 The current PDF generation in `app/api/generate-report/route.js` relies on a Python child process. This architectural choice is extremely fragile for Vercel or standard Node.js Next.js deployments, often leading to serverless function crashes or missing dependencies in production. Additionally, the application currently lacks basic HTTP security headers, leaving it vulnerable to clickjacking, MIME-type sniffing, and cross-site scripting (XSS).

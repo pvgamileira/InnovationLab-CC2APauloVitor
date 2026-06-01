@@ -1,24 +1,24 @@
-## Why
+## Por que
 
-The EduTrack AI platform lacks a personalized identity hub. While users can track their tasks, subjects, and Pomodoro time, they don't have a centralized location to view their meta-progress. The Premium User Profile Dashboard serves as a "Character Sheet" that reinforces the application's gamification system (XP/Levels) and provides a sense of cohesive identity for the student.
+A plataforma EduTrack AI carece de um centro de identidade personalizado. Embora os usuários possam acompanhar suas tarefas, disciplinas e tempo de Pomodoro, eles não possuem um local centralizado para visualizar seu progresso geral (meta-progresso). O Dashboard de Perfil do Usuário Premium funciona como uma "Ficha de Personagem" que reforça o sistema de gamificação da aplicação (XP/Níveis) e proporciona um sentimento de identidade coesa para o estudante.
 
-## What Changes
+## O que muda
 
-- Creation of `app/dashboard/perfil/page.jsx` utilizing `"use client"`.
-- Implementation of a glassmorphism Profile Header Card containing highly specific academic placeholder data.
-- Implementation of a Gamification Stats grid highlighting Level, XP, Total Tasks, and Study Hours.
-- Extensive use of `framer-motion` to animate the entry sequence of the user's data blocks, providing a premium, native-app feel.
+- Criação de `app/dashboard/perfil/page.jsx` utilizando `"use client"`.
+- Implementação de um cartão Profile Header em glassmorphism contendo dados acadêmicos estáticos e altamente específicos como placeholders.
+- Implementação de uma grade de Estatísticas de Gamificação destacando Nível, XP, Total de Tarefas e Horas de Estudo.
+- Uso extensivo do `framer-motion` para animar a sequência de entrada dos blocos de dados do usuário, proporcionando uma sensação de aplicação nativa e premium.
 
-## Capabilities
+## Funcionalidades
 
-### New Capabilities
-- `user-profile-identity`: A high-end visual representation of the user leveraging the Rich Black / Metallic Blue aesthetic.
-- `gamification-dashboard`: A grid breaking down meta-statistics mapped to static UI (MVP).
+### Novas Funcionalidades
+- `user-profile-identity`: Uma representação visual de alto nível do usuário aproveitando a estética Rich Black / Metallic Blue.
+- `gamification-dashboard`: Uma grade detalhando meta-estatísticas mapeadas para uma interface estática (MVP).
 
-### Modified Capabilities
-- None. (This is purely a frontend UI creation, deferring complex Supabase fetching of meta-stats for a future sprint).
+### Funcionalidades Modificadas
+- Nenhuma. (Esta é puramente uma implementação de interface frontend, adiando a busca complexa de meta-estatísticas no Supabase para um ciclo de desenvolvimento futuro).
 
-## Impact
+## Impacto
 
-- **New Route**: Establishes the previously blank `/dashboard/perfil` route.
-- **Dependencies**: Leverages existing `framer-motion`, `lucide-react`, and Tailwind integrations.
+- **Nova Rota:** Estabelece a rota `/dashboard/perfil` que anteriormente estava em branco.
+- **Dependências:** Aproveita as integrações existentes de `framer-motion`, `lucide-react` e Tailwind.

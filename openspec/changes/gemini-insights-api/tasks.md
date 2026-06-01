@@ -1,4 +1,4 @@
-## 1. Setup API Route
+## 1. Configuração API Route
 
 - [x] 1.1 Create the directory structure `app/api/gemini-insights/` if it does not exist.
 - [x] 1.2 Create the `route.js` file inside the new directory.

@@ -1,4 +1,4 @@
-# Tasks: Fix Notebook Markdown & Settings Logic
+# Tarefas: Fix Notebook Markdown & Settings Logic
 
 ## 1. Install Dependencies
 - [x] Check if `react-markdown` is installed. If not, install it via `npm install react-markdown`.

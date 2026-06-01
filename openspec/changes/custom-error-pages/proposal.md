@@ -1,4 +1,4 @@
-# Proposal: Implement Custom 404 and Error Pages
+# Proposta: Implement Custom 404 and Error Pages
 
 ## Problem
 Currently, the application relies on Next.js default error screens for 404 (Not Found) and 500 (Server Error) events. These default pages break the immersive, premium dark-themed experience of the application and do not provide clear, branded pathways for the user to recover and return to the application's core flow.

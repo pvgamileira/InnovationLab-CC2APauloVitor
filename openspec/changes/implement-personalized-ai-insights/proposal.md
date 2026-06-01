@@ -1,4 +1,4 @@
-# Proposal: Implement Personalized AI Insights with Profile Context
+# Proposta: Implement Personalized AI Insights with Profile Context
 
 ## Problem
 Currently, the Gemini Insights API gives generic advice because it only knows the number of tasks the user has. It does not utilize the rich context collected during the onboarding phase, such as the user's course, institution, shift, and occupation.
