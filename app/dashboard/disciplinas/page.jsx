@@ -172,9 +172,21 @@ export default function DisciplinasPage() {
 
       if (error) throw error;
       setIsEditModalOpen(false);
-      await refetchData(session.user.id);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('show-toast', {
+            detail: { message: "📚 Disciplina editada com sucesso!", type: "success" }
+          })
+        );
+      }
     } catch (err) {
-      alert(`Erro ao editar disciplina: ${err.message}`);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('show-toast', {
+            detail: { message: `Erro ao editar disciplina: ${err.message}`, type: "error" }
+          })
+        );
+      }
     } finally {
       setSubmittingEdit(false);
     }
@@ -186,9 +198,21 @@ export default function DisciplinasPage() {
       await supabase.from('academic_tasks').delete().eq('subject_id', subjectId);
       const { error } = await supabase.from('subjects').delete().eq('id', subjectId);
       if (error) throw error;
-      await refetchData(session.user.id);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('show-toast', {
+            detail: { message: "🗑️ Disciplina excluída com sucesso!", type: "success" }
+          })
+        );
+      }
     } catch (err) {
-      alert(`Erro ao excluir disciplina: ${err.message}`);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('show-toast', {
+            detail: { message: `Erro ao excluir disciplina: ${err.message}`, type: "error" }
+          })
+        );
+      }
     }
   };
 
@@ -305,7 +329,13 @@ export default function DisciplinasPage() {
       if (error) throw error;
       await refetchData(session.user.id);
     } catch (err) {
-      alert(`Erro ao salvar movimento: ${err.message}`);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('show-toast', {
+            detail: { message: `Erro ao salvar movimento: ${err.message}`, type: "error" }
+          })
+        );
+      }
       await refetchData(session?.user?.id);
     }
   };
@@ -434,9 +464,9 @@ export default function DisciplinasPage() {
 
       {/* MODAL EDITAR DISCIPLINA */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={() => setIsEditModalOpen(false)}></div>
-          <div className="w-full max-w-lg bg-[#0a0c14] border border-[#3a86ff]/20 rounded-3xl p-8 shadow-[0_0_80px_rgba(58,134,255,0.1)] relative z-10 animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/90 backdrop-blur-md animate-fade-in" onClick={() => setIsEditModalOpen(false)}></div>
+          <div className="w-full max-w-lg bg-[#0a0c14] border border-[#3a86ff]/20 rounded-3xl p-8 shadow-[0_0_80px_rgba(58,134,255,0.1)] relative z-10 animate-modal-in">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-extrabold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Editar Disciplina</h3>
               <button onClick={() => setIsEditModalOpen(false)} className="text-gray-600 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition-colors">

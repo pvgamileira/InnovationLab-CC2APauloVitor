@@ -1,5 +1,6 @@
 'use client';
 import GlobalMentor from '@/components/GlobalMentor';
+import ToastContainer from '@/components/Toast';
 import { usePathname, useRouter } from 'next/navigation'; // <-- useRouter adicionado
 import { supabase } from '@/lib/supabase';
 // Importação limpa, sem BarChart3 duplicado!
@@ -182,6 +183,7 @@ export default function DashboardLayout({ children }) {
         </a>
       </nav>
       <GlobalMentor />
+      <ToastContainer />
     </div>
   );
 }

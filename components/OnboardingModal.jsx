@@ -45,8 +45,8 @@ export default function OnboardingModal({ onClose, session }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-      <div className="bg-[#0a0c14] border border-[#3a86ff]/30 rounded-3xl p-8 max-w-lg w-full shadow-[0_0_80px_rgba(58,134,255,0.15)] animate-in fade-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-fade-in">
+      <div className="bg-[#0a0c14] border border-[#3a86ff]/30 rounded-3xl p-8 max-w-lg w-full shadow-[0_0_80px_rgba(58,134,255,0.15)] animate-modal-in">
         <div className="flex flex-col items-center text-center mb-8">
           <div className="w-16 h-16 bg-[#3a86ff]/10 rounded-full flex items-center justify-center mb-4">
             <Sparkles className="w-8 h-8 text-[#3a86ff]" />

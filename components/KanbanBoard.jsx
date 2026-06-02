@@ -196,7 +196,13 @@ export default function KanbanBoard({ tasks = [], moveTask }) {
             data: { xp: newXP, level: newLevel }
           });
           
-          alert("🎉 Você ganhou +50 XP!");
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+              new CustomEvent('show-toast', {
+                detail: { message: "🎉 Você ganhou +50 XP!", type: "success" }
+              })
+            );
+          }
         }
       } catch (err) {
         console.error("Erro ao atualizar XP:", err);
