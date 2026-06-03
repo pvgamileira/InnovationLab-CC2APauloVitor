@@ -118,6 +118,10 @@ export default function DashboardPage() {
 
   const handleCreateSubject = async (e) => {
     e.preventDefault();
+    if (!isPremium && subjects.length >= 3) {
+      showToast("Limite de 3 disciplinas atingido. Faça upgrade para o Pro.", "error");
+      return;
+    }
     setSubmitting(true);
     try {
       const { error } = await supabase.from('subjects').insert([
@@ -129,6 +133,7 @@ export default function DashboardPage() {
         }
       ]);
       if (error) throw error;
+      await refetchData(session.user.id);
 
       setIsSubjectModalOpen(false);
       setNewSubject({ name: '', professor: '', workload: 0 });
@@ -142,6 +147,10 @@ export default function DashboardPage() {
 
   const handleCreateTask = async (e) => {
     e.preventDefault();
+    if (!isPremium && currentMonthTasksCount >= 20) {
+      showToast("Limite de 20 tarefas atingido. Faça upgrade para o Pro.", "error");
+      return;
+    }
     setSubmitting(true);
     try {
       const { error } = await supabase.from('academic_tasks').insert([
@@ -154,6 +163,7 @@ export default function DashboardPage() {
         }
       ]);
       if (error) throw error;
+      await refetchData(session.user.id);
 
       setIsTaskModalOpen(false);
       setNewTask({ title: '', subject_id: '', due_date: '' });
