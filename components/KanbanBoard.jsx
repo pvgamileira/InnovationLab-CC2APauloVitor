@@ -164,7 +164,11 @@ function KanbanColumn({ column, tasks, colIndex, moveTask }) {
   );
 }
 
+import { useToast } from '@/context/ToastContext';
+
 export default function KanbanBoard({ tasks = [], moveTask }) {
+  const { showToast } = useToast();
+
   const grouped = STATUS_ORDER.reduce((acc, key) => {
     acc[key] = tasks.filter(t => (t.status === key) || (key === 'pending' && !STATUS_ORDER.includes(t.status)));
     return acc;
@@ -196,13 +200,7 @@ export default function KanbanBoard({ tasks = [], moveTask }) {
             data: { xp: newXP, level: newLevel }
           });
           
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(
-              new CustomEvent('show-toast', {
-                detail: { message: "🎉 Você ganhou +50 XP!", type: "success" }
-              })
-            );
-          }
+          showToast("🎉 Você ganhou +50 XP!", "success");
         }
       } catch (err) {
         console.error("Erro ao atualizar XP:", err);

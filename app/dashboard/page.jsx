@@ -11,8 +11,10 @@ import {
 import XpHudBar from '@/components/XpHudBar';
 import KanbanBoard from '@/components/KanbanBoard';
 import OnboardingModal from '@/components/OnboardingModal';
+import { useToast } from '@/context/ToastContext';
 
 export default function DashboardPage() {
+  const { showToast } = useToast();
   const [session, setSession] = useState(null);
   const [subjects, setSubjects] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -41,13 +43,7 @@ export default function DashboardPage() {
               data: { premium: true }
             });
             setIsPremium(true);
-            if (typeof window !== 'undefined') {
-              window.dispatchEvent(
-                new CustomEvent('show-toast', {
-                  detail: { message: "👑 Parabéns! Sua assinatura EduTrack Pro foi ativada com sucesso!", type: "success" }
-                })
-              );
-            }
+            showToast("👑 Parabéns! Sua assinatura EduTrack Pro foi ativada com sucesso!", "success");
             // Limpa o parâmetro query da URL mantendo o histórico limpo
             window.history.replaceState({}, document.title, window.location.pathname);
           }
@@ -136,21 +132,9 @@ export default function DashboardPage() {
 
       setIsSubjectModalOpen(false);
       setNewSubject({ name: '', professor: '', workload: 0 });
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('show-toast', {
-            detail: { message: "📚 Disciplina criada com sucesso!", type: "success" }
-          })
-        );
-      }
+      showToast("📚 Disciplina criada com sucesso!", "success");
     } catch (err) {
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('show-toast', {
-            detail: { message: `Erro: ${err.message}`, type: "error" }
-          })
-        );
-      }
+      showToast(`Erro: ${err.message}`, "error");
     } finally {
       setSubmitting(false);
     }
@@ -173,21 +157,9 @@ export default function DashboardPage() {
 
       setIsTaskModalOpen(false);
       setNewTask({ title: '', subject_id: '', due_date: '' });
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('show-toast', {
-            detail: { message: "✍️ Tarefa criada com sucesso!", type: "success" }
-          })
-        );
-      }
+      showToast("✍️ Tarefa criada com sucesso!", "success");
     } catch (err) {
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('show-toast', {
-            detail: { message: `Erro: ${err.message}`, type: "error" }
-          })
-        );
-      }
+      showToast(`Erro: ${err.message}`, "error");
     } finally {
       setSubmitting(false);
     }
@@ -230,13 +202,7 @@ export default function DashboardPage() {
       if (error) throw error;
 
     } catch (err) {
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('show-toast', {
-            detail: { message: `Erro ao mover tarefa: ${err.message}`, type: "error" }
-          })
-        );
-      }
+      showToast(`Erro ao mover tarefa: ${err.message}`, "error");
       // Se algo falhar no banco, recarrega a tela para não ficar quebrado
       if (session) await refetchData(session.user.id);
     }
@@ -271,13 +237,7 @@ export default function DashboardPage() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (err) {
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('show-toast', {
-            detail: { message: `Erro: ${err.message}`, type: "error" }
-          })
-        );
-      }
+      showToast(`Erro: ${err.message}`, "error");
     } finally {
       setIsGeneratingReport(false);
     }

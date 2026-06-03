@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useToast } from '@/context/ToastContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Play, Pause, RotateCcw, Timer, ChevronDown, CheckCircle2, 
@@ -15,6 +16,7 @@ const MODES = {
 };
 
 export default function FocusRoomPage() {
+  const { showToast } = useToast();
   const [session, setSession] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -76,11 +78,11 @@ export default function FocusRoomPage() {
     } else if (timeLeft === 0) {
       setIsActive(false);
       clearInterval(intervalRef.current);
-      // Aqui poderíamos engatilhar um alerta ou som
+      showToast("🍅 Sessão de foco concluída! Ótimo trabalho.", "success");
     }
     
     return () => clearInterval(intervalRef.current);
-  }, [isActive, timeLeft]);
+  }, [isActive, timeLeft, showToast]);
 
   // Handlers
   const toggleTimer = () => setIsActive(!isActive);

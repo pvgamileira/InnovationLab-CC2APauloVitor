@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useToast } from '@/context/ToastContext';
 import {
   FolderOpen, Layers, Loader2, CheckCircle2, Circle, AlertCircle, Calendar, Clock, Pencil, Trash2, X
 } from 'lucide-react';
@@ -135,6 +136,7 @@ function BoardColumn({ column, tasks }) {
 
 // --- Main Page ---
 export default function DisciplinasPage() {
+  const { showToast } = useToast();
   const [session, setSession] = useState(null);
   const [subjects, setSubjects] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -172,21 +174,9 @@ export default function DisciplinasPage() {
 
       if (error) throw error;
       setIsEditModalOpen(false);
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('show-toast', {
-            detail: { message: "📚 Disciplina editada com sucesso!", type: "success" }
-          })
-        );
-      }
+      showToast("📚 Disciplina editada com sucesso!", "success");
     } catch (err) {
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('show-toast', {
-            detail: { message: `Erro ao editar disciplina: ${err.message}`, type: "error" }
-          })
-        );
-      }
+      showToast(`Erro ao editar disciplina: ${err.message}`, "error");
     } finally {
       setSubmittingEdit(false);
     }
@@ -198,21 +188,9 @@ export default function DisciplinasPage() {
       await supabase.from('academic_tasks').delete().eq('subject_id', subjectId);
       const { error } = await supabase.from('subjects').delete().eq('id', subjectId);
       if (error) throw error;
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('show-toast', {
-            detail: { message: "🗑️ Disciplina excluída com sucesso!", type: "success" }
-          })
-        );
-      }
+      showToast("🗑️ Disciplina excluída com sucesso!", "success");
     } catch (err) {
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('show-toast', {
-            detail: { message: `Erro ao excluir disciplina: ${err.message}`, type: "error" }
-          })
-        );
-      }
+      showToast(`Erro ao excluir disciplina: ${err.message}`, "error");
     }
   };
 
@@ -329,13 +307,7 @@ export default function DisciplinasPage() {
       if (error) throw error;
       await refetchData(session.user.id);
     } catch (err) {
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('show-toast', {
-            detail: { message: `Erro ao salvar movimento: ${err.message}`, type: "error" }
-          })
-        );
-      }
+      showToast(`Erro ao salvar movimento: ${err.message}`, "error");
       await refetchData(session?.user?.id);
     }
   };
