@@ -6,8 +6,10 @@ import {
     User, Briefcase, GraduationCap, Shield,
     Trophy, Target, Zap, BookOpen, Edit3, X, Loader2, Download, Clock
 } from 'lucide-react';
+import { useToast } from '@/context/ToastContext';
 
 export default function PerfilPage() {
+    const { showToast } = useToast();
     const [loading, setLoading] = useState(true);
     const [session, setSession] = useState(null);
     const [isExporting, setIsExporting] = useState(false);
@@ -126,7 +128,7 @@ export default function PerfilPage() {
             a.click();
             window.URL.revokeObjectURL(url);
         } catch (err) {
-            alert(`Erro: ${err.message}`);
+            showToast(`Erro: ${err.message}`, "error");
         } finally {
             setIsExporting(false);
         }
@@ -151,7 +153,7 @@ export default function PerfilPage() {
             setProfileMeta(editForm);
             setIsEditModalOpen(false);
         } catch (error) {
-            alert(`Erro: ${error.message}`);
+            showToast(`Erro: ${error.message}`, "error");
         } finally {
             setIsSaving(false);
         }

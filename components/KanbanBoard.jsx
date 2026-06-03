@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+
 import { supabase } from '@/lib/supabase';
 import {
   Circle, CheckCircle2, Clock, Calendar, AlertCircle,
@@ -207,6 +209,34 @@ export default function KanbanBoard({ tasks = [], moveTask }) {
       }
     }
   };
+
+  useEffect(() => {
+    if (!tasks || tasks.length === 0) return;
+    
+    const now = new Date();
+    const upcomingTasks = [];
+    const overdueTasks = [];
+
+    tasks.forEach(task => {
+      if (task.status === 'completed' || !task.due_date) return;
+      
+      const dueDate = new Date(task.due_date);
+      const timeDiff = dueDate - now;
+      const hoursDiff = timeDiff / (1000 * 60 * 60);
+
+      if (timeDiff < 0) {
+        overdueTasks.push(task);
+      } else if (hoursDiff <= 24 && hoursDiff >= 0) {
+        upcomingTasks.push(task);
+      }
+    });
+
+    if (overdueTasks.length > 0) {
+      showToast(`⚠️ Você tem ${overdueTasks.length} tarefa(s) atrasada(s)!`, "error");
+    } else if (upcomingTasks.length > 0) {
+      showToast(`⏰ Atenção! ${upcomingTasks.length} tarefa(s) vencem em menos de 24h.`, "error");
+    }
+  }, [tasks]); // Only run when tasks change (first load or new data)
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">

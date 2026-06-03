@@ -1,6 +1,5 @@
 'use client';
 import GlobalMentor from '@/components/GlobalMentor';
-import { ToastProvider } from '@/context/ToastContext';
 import { usePathname, useRouter } from 'next/navigation'; // <-- useRouter adicionado
 import { supabase } from '@/lib/supabase';
 // Importação limpa, sem BarChart3 duplicado!
@@ -59,7 +58,6 @@ export default function DashboardLayout({ children }) {
   const mobileLinks = allLinks.filter(l => ['Painel', 'Disciplinas', 'Estatísticas', 'Configurações'].includes(l.name));
 
   return (
-    <ToastProvider>
       <div className="flex h-screen bg-[#02040a] text-gray-100 font-sans selection:bg-[#3a86ff]/30 overflow-hidden">
 
         <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] bg-[#3a86ff]/5 blur-[150px] rounded-full pointer-events-none z-0"></div>
@@ -185,6 +183,5 @@ export default function DashboardLayout({ children }) {
         </nav>
         <GlobalMentor />
       </div>
-    </ToastProvider>
   );
 }

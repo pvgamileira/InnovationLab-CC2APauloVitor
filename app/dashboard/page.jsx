@@ -343,11 +343,11 @@ export default function DashboardPage() {
           </button>
           <button 
             onClick={() => setIsTaskModalOpen(true)} 
-            disabled={currentMonthTasksCount >= 20}
+            disabled={!isPremium && currentMonthTasksCount >= 20}
             className="w-full sm:w-auto h-12 px-6 rounded-xl bg-gradient-to-r from-[#3a86ff] to-[#2563eb] text-white hover:shadow-[0_0_30px_rgba(58,134,255,0.4)] hover:brightness-110 border border-[#3a86ff]/50 transition-all font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="w-5 h-5" />
-            {currentMonthTasksCount >= 20 ? "Limite Atingido" : "Nova Tarefa"}
+            {(!isPremium && currentMonthTasksCount >= 20) ? "Limite Atingido" : "Nova Tarefa"}
           </button>
         </div>
       </header>
@@ -504,10 +504,10 @@ export default function DashboardPage() {
 
         <button
           onClick={() => setIsTaskModalOpen(true)}
-          disabled={currentMonthTasksCount >= 20}
+          disabled={!isPremium && currentMonthTasksCount >= 20}
           className="mt-5 w-full py-3 rounded-xl border border-dashed border-white/10 text-gray-500 font-bold tracking-wide hover:text-white hover:border-[#3a86ff]/50 hover:bg-[#3a86ff]/10 transition-all text-xs uppercase disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-white/10 disabled:hover:text-gray-500"
         >
-          {currentMonthTasksCount >= 20 ? "Limite de 20 tarefas/mês atingido" : "+ Adicionar Demanda"}
+          {(!isPremium && currentMonthTasksCount >= 20) ? "Limite de 20 tarefas/mês atingido" : "+ Adicionar Demanda"}
         </button>
       </div>
 
@@ -540,19 +540,19 @@ export default function DashboardPage() {
                   <button type="button" onClick={() => setIsSubjectModalOpen(false)} className="flex-1 py-3 px-4 bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/10 rounded-xl text-gray-300 font-bold transition-all">Cancelar</button>
                   <button 
                     type="submit" 
-                    disabled={submitting || subjects.length >= 3} 
+                    disabled={submitting || (!isPremium && subjects.length >= 3)} 
                     className="flex-[2] py-3 px-4 bg-[#3a86ff] hover:bg-[#2563eb] shadow-[0_0_20px_rgba(58,134,255,0.3)] hover:shadow-[0_0_30px_rgba(58,134,255,0.5)] rounded-xl text-white font-extrabold transition-all disabled:opacity-50 flex justify-center items-center cursor-pointer disabled:cursor-not-allowed text-sm"
                   >
                     {submitting ? (
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    ) : subjects.length >= 3 ? (
+                    ) : (!isPremium && subjects.length >= 3) ? (
                       "Limite de 3 atingido - Faça Upgrade"
                     ) : (
                       "Confirmar Criação"
                     )}
                   </button>
                 </div>
-                {subjects.length >= 3 && (
+                {(!isPremium && subjects.length >= 3) && (
                   <p className="text-center text-xs text-gray-400 mt-2 leading-relaxed">
                     Você atingiu o limite de disciplinas do plano Padrão.{' '}
                     <a 
@@ -582,7 +582,7 @@ export default function DashboardPage() {
               </button>
             </div>
 
-            {currentMonthTasksCount >= 20 ? (
+            {(!isPremium && currentMonthTasksCount >= 20) ? (
               <div className="bg-amber-950/20 border border-amber-500/30 rounded-2xl p-6 text-amber-200/90 flex flex-col gap-4 text-center">
                 <div className="flex items-center gap-3 justify-center text-amber-400 font-extrabold">
                   <AlertCircle className="w-6 h-6 shrink-0" />
