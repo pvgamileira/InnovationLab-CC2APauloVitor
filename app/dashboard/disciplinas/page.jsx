@@ -4,135 +4,10 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/context/ToastContext';
 import {
-  FolderOpen, Layers, Loader2, CheckCircle2, Circle, AlertCircle, Calendar, Clock, Pencil, Trash2, X
+  FolderOpen, Pencil, Trash2, X, Loader2, Timer
 } from 'lucide-react';
-import {
-  DndContext,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  closestCorners,
-  DragOverlay,
-  defaultDropAnimationSideEffects,
-  useDroppable
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-
-// --- CONSTANTE DE ORDEM ---
-const STATUS_ORDER = ['pending', 'in_progress', 'completed'];
-
-// --- Sortable Task Component ---
-function SortableTaskCard({ task }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: task.id, data: { type: 'Task', task } });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.3 : 1,
-  };
-
-  const now = new Date();
-  const dueDate = task.due_date ? new Date(task.due_date) : null;
-  const isOverdue = dueDate && dueDate < now && task.status !== 'completed';
-  const isUpcoming = dueDate && (dueDate - now <= 48 * 60 * 60 * 1000) && dueDate > now && task.status !== 'completed';
-  const isCompleted = task.status === 'completed';
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className={`group bg-white/5 backdrop-blur-sm border ${isDragging ? 'border-[#3a86ff] shadow-[0_0_15px_rgba(58,134,255,0.4)]' : 'border-white/10 hover:border-white/20 hover:bg-white/10'} rounded-2xl p-4 transition-colors cursor-grab active:cursor-grabbing flex flex-col gap-3 relative z-10 touch-none`}
-    >
-      <h4 className={`text-sm font-bold leading-snug ${isCompleted ? 'line-through text-gray-500' : 'text-gray-100 group-hover:text-white'}`}>
-        {task.title}
-      </h4>
-
-      <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider mt-auto pointer-events-none">
-        <span className="px-2 py-0.5 bg-black/50 text-[#3a86ff] rounded-[6px] border border-[#3a86ff]/20 truncate max-w-[110px]">
-          {task.subjects?.name || 'Geral'}
-        </span>
-
-        {!dueDate ? (
-          <span className="text-gray-500 flex items-center gap-1 bg-black/40 px-2 py-0.5 rounded-[6px] border border-gray-600/20">
-            Prazo Indeterminado
-          </span>
-        ) : (
-          <span className="text-orange-300/80 flex items-center gap-1 bg-black/40 px-2 py-0.5 rounded-[6px] border border-orange-500/10">
-            <Calendar className="w-2.5 h-2.5" />
-            {dueDate.toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
-          </span>
-        )}
-
-        {isOverdue && (
-          <span className="text-red-400 flex items-center gap-1 bg-red-900/30 px-2 py-0.5 rounded-[6px] border border-red-500/30">
-            <AlertCircle className="w-2.5 h-2.5" />
-            Atrasada
-          </span>
-        )}
-
-        {isUpcoming && (
-          <span className="text-yellow-400 flex items-center gap-1 bg-yellow-900/30 px-2 py-0.5 rounded-[6px] border border-yellow-500/30">
-            <Clock className="w-2.5 h-2.5" />
-            Próxima
-          </span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// --- Status Column Component ---
-function BoardColumn({ column, tasks }) {
-  const Icon = column.icon;
-  const { setNodeRef } = useDroppable({
-    id: column.id,
-    data: { type: 'Column', column }
-  });
-
-  return (
-    <div className="flex flex-col bg-[#05070e]/60 backdrop-blur-xl border border-white/5 rounded-[1.5rem] overflow-hidden flex-1 h-[600px] max-h-[70vh]">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 sticky top-0 bg-[#05070e]/90 z-20">
-        <div className="flex items-center gap-2.5">
-          <Icon className={`w-4 h-4 ${column.accentColor} ${column.id === 'in_progress' ? 'animate-spin' : ''}`}
-            style={column.id === 'in_progress' ? { animationDuration: '3s' } : {}} />
-          <h3 className="text-sm font-bold text-gray-200 tracking-wide">{column.label}</h3>
-        </div>
-        <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${column.badgeBg}`}>
-          {tasks.length}
-        </span>
-      </div>
-
-      <div ref={setNodeRef} className="flex-1 p-4 overflow-y-auto scrollbar-hide flex flex-col gap-3 min-h-[150px]">
-        <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
-          {tasks.length === 0 ? (
-            <div className={`flex-1 flex flex-col items-center justify-center text-center border-2 border-dashed ${column.borderColor} rounded-xl py-8 px-4`}>
-              <Icon className={`w-8 h-8 ${column.accentColor} opacity-20 mb-2`} />
-              <p className="text-xs text-gray-600 font-medium">{column.emptyMsg}</p>
-            </div>
-          ) : (
-            tasks.map(task => (
-              <SortableTaskCard key={task.id} task={task} />
-            ))
-          )}
-        </SortableContext>
-      </div>
-    </div>
-  );
-}
+import KanbanBoard from '@/components/KanbanBoard';
+import Link from 'next/link';
 
 // --- Main Page ---
 export default function DisciplinasPage() {
@@ -141,8 +16,8 @@ export default function DisciplinasPage() {
   const [subjects, setSubjects] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTask, setActiveTask] = useState(null);
   const [activeFilter, setActiveFilter] = useState('all'); // Estado do filtro de disciplinas
+  const [isDraggingSubject, setIsDraggingSubject] = useState(false);
   
   // Estados e Funções de CRUD do Editar e Excluir Disciplinas
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -188,7 +63,13 @@ export default function DisciplinasPage() {
       await supabase.from('academic_tasks').delete().eq('subject_id', subjectId);
       const { error } = await supabase.from('subjects').delete().eq('id', subjectId);
       if (error) throw error;
-      showToast("🗑️ Disciplina excluída com sucesso!", "success");
+      
+      // OpenSpec: Ensure local state reflects the database deletion to prevent ghost interactions
+      setSubjects(prev => prev.filter(s => s.id !== subjectId));
+      setIsEditModalOpen(false);
+      setIsDraggingSubject(false);
+
+      showToast("🗑️ Disciplina eliminada", "success");
     } catch (err) {
       showToast(`Erro ao excluir disciplina: ${err.message}`, "error");
     }
@@ -217,6 +98,35 @@ export default function DisciplinasPage() {
     initData();
   }, []);
 
+  // Smart Alerts
+  useEffect(() => {
+    if (!tasks || tasks.length === 0) return;
+    const now = new Date();
+    
+    // Find first overdue task
+    const overdueTask = tasks.find(t => {
+      if (!t.due_date || t.status === 'completed') return false;
+      return new Date(t.due_date) < now;
+    });
+
+    if (overdueTask) {
+      showToast(`⚠️ A tarefa "${overdueTask.title}" está atrasada!`, "error");
+      return;
+    }
+
+    // Find first upcoming task (< 24h)
+    const upcomingTask = tasks.find(t => {
+      if (!t.due_date || t.status === 'completed') return false;
+      const dueDate = new Date(t.due_date);
+      const diffHrs = (dueDate - now) / (1000 * 60 * 60);
+      return diffHrs > 0 && diffHrs <= 24;
+    });
+
+    if (upcomingTask) {
+      showToast(`⏰ A tarefa "${upcomingTask.title}" vence em menos de 24h!`, "warning");
+    }
+  }, [tasks, showToast]);
+
   const refetchData = async (userId) => {
     const [subjectsRes, tasksRes] = await Promise.all([
       supabase.from('subjects').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
@@ -227,88 +137,39 @@ export default function DisciplinasPage() {
     if (!tasksRes.error) setTasks(tasksRes.data || []);
   };
 
-  const columns = [
-    { id: 'pending', label: 'Backlog', icon: Circle, accentColor: 'text-gray-400', borderColor: 'border-gray-500/20', badgeBg: 'bg-gray-700/40 text-gray-300 border-gray-500/20', emptyMsg: 'Nenhuma tarefa pendente.' },
-    { id: 'in_progress', label: 'Em Progresso', icon: Loader2, accentColor: 'text-[#3a86ff]', borderColor: 'border-[#3a86ff]/20', badgeBg: 'bg-[#3a86ff]/10 text-[#3a86ff] border-[#3a86ff]/20', emptyMsg: 'Nenhuma tarefa em andamento.' },
-    { id: 'completed', label: 'Concluído', icon: CheckCircle2, accentColor: 'text-emerald-400', borderColor: 'border-emerald-500/20', badgeBg: 'bg-emerald-900/20 text-emerald-400 border-emerald-500/20', emptyMsg: 'Nenhuma tarefa concluída.' },
-  ];
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-  );
-
-  const getTaskStatus = (id) => tasks.find((t) => t.id === id)?.status;
-
-  const onDragStart = (event) => {
-    const { active } = event;
-    const task = tasks.find((t) => t.id === active.id);
-    setActiveTask(task || null);
-  };
-
-  const onDragOver = (event) => {
-    const { active, over } = event;
-    if (!over) return;
-
-    const activeId = active.id;
-    const overId = over.id;
-
-    if (activeId === overId) return;
-
-    const isActiveTask = active.data.current?.type === 'Task';
-    const isOverTask = over.data.current?.type === 'Task';
-    const isOverColumn = over.data.current?.type === 'Column';
-
-    if (!isActiveTask) return;
-
-    setTasks((prev) => {
-      const activeTaskIndex = prev.findIndex((t) => t.id === activeId);
-      const activeTask = prev[activeTaskIndex];
-      let newStatus = activeTask.status;
-      let newIndex = activeTaskIndex;
-
-      if (isOverTask) {
-        const overTaskIndex = prev.findIndex((t) => t.id === overId);
-        newStatus = prev[overTaskIndex].status;
-        newIndex = overTaskIndex;
-      } else if (isOverColumn) {
-        newStatus = overId;
-        newIndex = prev.length;
-      }
-
-      if (activeTask.status === newStatus) {
-        const updated = [...prev];
-        const [moved] = updated.splice(activeTaskIndex, 1);
-        const targetIndex = isOverTask ? updated.findIndex((t) => t.id === overId) : activeTaskIndex;
-        updated.splice(targetIndex >= 0 ? targetIndex : updated.length, 0, moved);
-        return updated;
-      }
-
-      const updated = [...prev];
-      updated[activeTaskIndex] = { ...activeTask, status: newStatus };
-      return updated;
-    });
-  };
-
-  const onDragEnd = async (event) => {
-    setActiveTask(null);
-    const { active, over } = event;
-    if (!over) return;
-
-    const taskId = active.id;
-    const task = tasks.find(t => t.id === taskId);
-    if (!task) return;
-
+  const handleMoveTask = async (taskId, actionOrStatus) => {
     try {
+      const task = tasks.find(t => t.id.toString() === taskId.toString());
+      if (!task) return;
+
+      let newStatus = actionOrStatus;
+      const STATUS_ORDER_LIST = ['pending', 'in_progress', 'completed'];
+
+      if (actionOrStatus === 'forward' || actionOrStatus === 'backward') {
+        const currentIndex = STATUS_ORDER_LIST.indexOf(task.status);
+        const validIndex = currentIndex === -1 ? 0 : currentIndex;
+        const newIndex = actionOrStatus === 'forward'
+          ? Math.min(validIndex + 1, STATUS_ORDER_LIST.length - 1)
+          : Math.max(validIndex - 1, 0);
+        newStatus = STATUS_ORDER_LIST[newIndex];
+      }
+
+      if (task.status === newStatus) return;
+
+      // Optimistic update
+      setTasks(prev => prev.map(t =>
+        t.id.toString() === taskId.toString() ? { ...t, status: newStatus } : t
+      ));
+
       const { error } = await supabase
         .from('academic_tasks')
-        .update({ status: task.status })
-        .eq('id', taskId);
+        .update({ status: newStatus })
+        .eq('id', task.id);
 
       if (error) throw error;
-      await refetchData(session.user.id);
     } catch (err) {
-      showToast(`Erro ao salvar movimento: ${err.message}`, "error");
-      await refetchData(session?.user?.id);
+      showToast(`Erro ao mover tarefa: ${err.message}`, "error");
+      if (session) await refetchData(session.user.id);
     }
   };
 
@@ -324,13 +185,22 @@ export default function DisciplinasPage() {
     <div className="max-w-[1400px] mx-auto px-6 lg:px-12 pt-10 pb-20 animate-in fade-in duration-700">
 
       {/* Page Header */}
-      <header className="mb-10">
-        <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight bg-gradient-to-br from-white via-blue-50 to-[#3a86ff] bg-clip-text text-transparent mb-3">
-          Disciplinas
-        </h1>
-        <p className="text-gray-400 font-medium tracking-wide">
-          Visão geral das matérias ativas e quadro interativo de tarefas.
-        </p>
+      <header className="mb-10 flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+        <div>
+          <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight bg-gradient-to-br from-white via-blue-50 to-[#3a86ff] bg-clip-text text-transparent mb-3">
+            Disciplinas
+          </h1>
+          <p className="text-gray-400 font-medium tracking-wide">
+            Visão geral das matérias ativas e quadro interativo de tarefas.
+          </p>
+        </div>
+        <Link 
+          href="/dashboard/foco"
+          className="bg-[#3a86ff] hover:bg-[#2563eb] text-white py-2.5 px-5 rounded-xl flex items-center justify-center gap-2 font-bold transition-all shadow-[0_0_20px_rgba(58,134,255,0.3)] hover:shadow-[0_0_30px_rgba(58,134,255,0.5)] shrink-0"
+        >
+          <Timer className="w-5 h-5" />
+          Modo Foco
+        </Link>
       </header>
 
       {/* Subject Context Header */}
@@ -341,25 +211,15 @@ export default function DisciplinasPage() {
           </div>
         ) : (
           subjects.map(subj => (
-            <div key={subj.id} className="min-w-[280px] flex-shrink-0 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition-all duration-300 relative group">
-              {/* CRUD Floating Controls */}
-              <div className="absolute top-4 right-4 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                <button 
-                  onClick={() => handleOpenEditModal(subj)}
-                  className="p-1.5 rounded-lg bg-white/5 hover:bg-[#3a86ff]/20 border border-white/10 hover:border-[#3a86ff]/40 text-gray-400 hover:text-[#3a86ff] transition-all cursor-pointer"
-                  title="Editar Disciplina"
-                >
-                  <Pencil className="w-3 h-3" />
-                </button>
-                <button 
-                  onClick={() => handleDeleteSubject(subj.id)}
-                  className="p-1.5 rounded-lg bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/40 text-gray-400 hover:text-red-400 transition-all cursor-pointer"
-                  title="Excluir Disciplina"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </button>
-              </div>
-              <div className="flex items-center gap-3 mb-3">
+            <div 
+              key={subj.id} 
+              onDoubleClick={() => handleOpenEditModal(subj)}
+              draggable={true}
+              onDragStart={(e) => { e.dataTransfer.setData('subjectId', subj.id); setIsDraggingSubject(true); }}
+              onDragEnd={() => setIsDraggingSubject(false)}
+              className="min-w-[280px] flex-shrink-0 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition-all duration-300 relative group cursor-pointer active:cursor-grabbing"
+            >
+              <div className="flex items-center gap-3 mb-3 pointer-events-none">
                 <div className="w-10 h-10 rounded-full bg-[#3a86ff]/20 flex items-center justify-center">
                   <FolderOpen className="w-5 h-5 text-[#3a86ff]" />
                 </div>
@@ -403,36 +263,10 @@ export default function DisciplinasPage() {
       </div>
 
       {/* DnD Kanban Board */}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragStart={onDragStart}
-        onDragOver={onDragOver}
-        onDragEnd={onDragEnd}
-      >
-        <div className="flex flex-col md:flex-row gap-6 items-stretch">
-          {columns.map(col => {
-            // Aplicação do Filtro
-            const filteredTasks = tasks.filter(t => {
-              const matchesStatus = t.status === col.id || (col.id === 'pending' && !STATUS_ORDER.includes(t.status));
-              const matchesSubject = activeFilter === 'all' || t.subjects?.name === activeFilter;
-              return matchesStatus && matchesSubject;
-            });
-
-            return (
-              <BoardColumn
-                key={col.id}
-                column={col}
-                tasks={filteredTasks}
-              />
-            );
-          })}
-        </div>
-
-        <DragOverlay dropAnimation={defaultDropAnimationSideEffects({ duration: 200 })}>
-          {activeTask ? <SortableTaskCard task={activeTask} /> : null}
-        </DragOverlay>
-      </DndContext>
+      <KanbanBoard
+        tasks={tasks.filter(t => activeFilter === 'all' || t.subjects?.name === activeFilter)}
+        moveTask={handleMoveTask}
+      />
 
       {/* MODAL EDITAR DISCIPLINA */}
       {isEditModalOpen && (
@@ -466,6 +300,23 @@ export default function DisciplinasPage() {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* TRASH DROPZONE */}
+      {isDraggingSubject && (
+        <div 
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => { 
+            e.preventDefault(); 
+            const id = e.dataTransfer.getData('subjectId'); 
+            if(id) handleDeleteSubject(id); 
+            setIsDraggingSubject(false); 
+          }}
+          className="fixed bottom-10 left-1/2 -translate-x-1/2 w-96 h-32 z-50 bg-red-900/40 backdrop-blur-md border-2 border-dashed border-red-500/50 rounded-2xl flex flex-col items-center justify-center text-red-200 transition-all"
+        >
+          <Trash2 className="w-8 h-8 mb-2 opacity-80" />
+          <span className="font-bold text-sm">Solte aqui para excluir</span>
         </div>
       )}
 

@@ -2,11 +2,11 @@
 
 import { Zap } from 'lucide-react';
 
-export default function XpHudBar({ completedTasks = 0 }) {
-  const totalXP = completedTasks * 50;
-  const level = Math.floor(totalXP / 500) + 1;
-  const currentLevelXP = totalXP % 500;
-  const progress = (currentLevelXP / 500) * 100;
+export default function XpHudBar({ userData }) {
+  const level = userData?.level || 1;
+  const xp = userData?.xp || 0;
+  const nextLevelXp = level * 500;
+  const progress = Math.min((xp / nextLevelXp) * 100, 100);
 
   return (
     <div className="hidden sm:flex items-center gap-3 min-w-[160px]">
@@ -30,7 +30,7 @@ export default function XpHudBar({ completedTasks = 0 }) {
           />
         </div>
         <span className="text-[10px] text-gray-500 font-mono leading-none tracking-tight">
-          {currentLevelXP}/500 XP
+          {xp}/{nextLevelXp} XP
         </span>
       </div>
     </div>

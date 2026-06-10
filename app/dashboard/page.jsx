@@ -6,15 +6,19 @@ import { PieChart, Pie, Cell, Tooltip } from 'recharts';
 import {
   BookOpen, Plus, Clock, ListTodo, CheckCircle2,
   Circle, X, Search, Calendar, FolderOpen, AlertCircle, Play, BarChart3, Download,
-  Zap, Target, ShieldCheck
+  Zap, Target, ShieldCheck, Timer, Moon, Flame, Loader2
 } from 'lucide-react';
+import Link from 'next/link';
 import XpHudBar from '@/components/XpHudBar';
 import KanbanBoard from '@/components/KanbanBoard';
 import OnboardingModal from '@/components/OnboardingModal';
 import { useToast } from '@/context/ToastContext';
+import { useUserContext } from '@/context/UserContext';
 
 export default function DashboardPage() {
   const { showToast } = useToast();
+  const { userData, refreshUserData } = useUserContext();
+  const isPremium = userData.premium;
   const [session, setSession] = useState(null);
   const [subjects, setSubjects] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -29,7 +33,50 @@ export default function DashboardPage() {
   const [submitting, setSubmitting] = useState(false);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
-  const [isPremium, setIsPremium] = useState(false);
+  const [pdfCooldown, setPdfCooldown] = useState(0);
+
+  const [isPredicting, setIsPredicting] = useState(false);
+  const [aiEstimate, setAiEstimate] = useState(null);
+
+  useEffect(() => {
+    if (newTask.title.length < 5) {
+      setAiEstimate(null);
+      setIsPredicting(false);
+      return;
+    }
+
+    setIsPredicting(true);
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        const response = await fetch('/api/ai/estimativa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ titulo: newTask.title })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setAiEstimate(data.estimativa);
+        } else {
+          setAiEstimate(null); // Silent fail on error
+        }
+      } catch (error) {
+        setAiEstimate(null); // Graceful degradation
+      } finally {
+        setIsPredicting(false);
+      }
+    }, 800);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [newTask.title]);
+
+  useEffect(() => {
+    let timer;
+    if (pdfCooldown > 0) {
+      timer = setTimeout(() => setPdfCooldown(prev => prev - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [pdfCooldown]);
 
   // Listener de ativação de Assinatura Premium Pro via URL query parameters
   useEffect(() => {
@@ -42,7 +89,7 @@ export default function DashboardPage() {
             await supabase.auth.updateUser({
               data: { premium: true }
             });
-            setIsPremium(true);
+            await refreshUserData();
             showToast("👑 Parabéns! Sua assinatura EduTrack Pro foi ativada com sucesso!", "success");
             // Limpa o parâmetro query da URL mantendo o histórico limpo
             window.history.replaceState({}, document.title, window.location.pathname);
@@ -76,11 +123,6 @@ export default function DashboardPage() {
         }
 
         setSession(session);
-
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.user_metadata) {
-          setIsPremium(!!user.user_metadata.premium);
-        }
 
         const { data: profile } = await supabase.from('user_profiles').select('*').eq('user_id', session.user.id).single();
         if (!profile) {
@@ -177,6 +219,9 @@ export default function DashboardPage() {
 
   // A LÓGICA MESTRA DO KANBAN (Aceita Clique nas setas E o Drag and Drop)
   const moveTask = async (taskId, actionOrStatus) => {
+    // Guarda o snapshot anterior para caso de falha
+    const originalColumnsSnapshot = [...tasks];
+    
     try {
       // Converte tudo para string para não dar erro de tipos (Type Mismatch)
       const task = tasks.find(t => t.id.toString() === taskId.toString());
@@ -198,6 +243,8 @@ export default function DashboardPage() {
       // Se a tarefa já está na coluna certa, não faz nada
       if (task.status === newStatus) return;
 
+      const wasAlreadyCompleted = task.status === 'completed';
+
       // 1. Atualiza a tela instantaneamente (Optimistic UI)
       setTasks(prev => prev.map(t =>
         t.id.toString() === taskId.toString() ? { ...t, status: newStatus } : t
@@ -211,10 +258,28 @@ export default function DashboardPage() {
 
       if (error) throw error;
 
+      // 3. Subtração de XP se movido para fora de "Concluídas"
+      if (wasAlreadyCompleted && newStatus !== 'completed') {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const currentXP = user.user_metadata?.xp || 0;
+          const xpReward = 50;
+          const newXP = Math.max(0, currentXP - xpReward);
+          const newLevel = Math.floor(newXP / 500) + 1;
+          
+          await supabase.auth.updateUser({
+            data: { xp: newXP, level: newLevel }
+          });
+          
+          await refreshUserData();
+        }
+      }
+
     } catch (err) {
-      showToast(`Erro ao mover tarefa: ${err.message}`, "error");
-      // Se algo falhar no banco, recarrega a tela para não ficar quebrado
-      if (session) await refetchData(session.user.id);
+      console.error("Error moving task:", err);
+      // Revert state safely to previous columns
+      setTasks(originalColumnsSnapshot);
+      showToast("Erro ao mover a tarefa. Tente novamente.", "error");
     }
   };
 
@@ -246,6 +311,7 @@ export default function DashboardPage() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      setPdfCooldown(30);
     } catch (err) {
       showToast(`Erro: ${err.message}`, "error");
     } finally {
@@ -298,46 +364,26 @@ export default function DashboardPage() {
           <p className="text-gray-400 font-medium tracking-wide">Acompanhe seu desempenho metodicamente.</p>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-5">
-          <XpHudBar completedTasks={completedTasks} />
+          <XpHudBar userData={userData} />
 
           {/* Achievement Badges UI with Premium dynamic aura & Staggered Entry animation */}
-          <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-2xl px-4 h-12 relative group select-none animate-in slide-in-from-bottom-3 fade-in duration-700 delay-150 fill-mode-both">
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Insígnias</span>
+          <Link href="/dashboard/perfil" className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-2 hover:bg-white/10 transition-colors flex-shrink-0 cursor-pointer">
+            <span className="text-xs font-bold text-gray-400 hidden xl:inline-block tracking-wider">INSÍGNIAS</span>
             <div className="flex items-center gap-2">
-              {/* Badge 1: Foco Rápido (Zap) */}
-              <div 
-                className={`w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-500/5 border ${isPremium ? 'border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.25)]' : 'border-amber-500/20'} flex items-center justify-center text-amber-400 cursor-help transition-all duration-300 hover:scale-110 hover:shadow-[0_0_12px_rgba(245,158,11,0.5)] relative group/tooltip`}
-              >
-                <Zap className="w-3.5 h-3.5 fill-amber-500/10" />
-                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-[#0a0c14] border border-white/10 text-[9px] font-bold text-amber-400 rounded-md opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-50 shadow-xl">
-                  ⚡ Foco Rápido (IA)
-                </span>
+              <div className="bg-purple-500/20 p-1.5 rounded-full flex-shrink-0">
+                <Moon className="w-4 h-4 text-purple-400" />
               </div>
-
-              {/* Badge 2: Sniper de Prazos (Target) */}
-              <div 
-                className={`w-7 h-7 rounded-lg bg-gradient-to-br from-[#3a86ff]/20 to-[#3a86ff]/5 border ${isPremium ? 'border-[#3a86ff]/50 shadow-[0_0_10px_rgba(58,134,255,0.25)]' : 'border-[#3a86ff]/20'} flex items-center justify-center text-[#3a86ff] cursor-help transition-all duration-300 hover:scale-110 hover:shadow-[0_0_12px_rgba(58,134,255,0.5)] relative group/tooltip`}
-              >
-                <Target className="w-3.5 h-3.5" />
-                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-[#0a0c14] border border-white/10 text-[9px] font-bold text-[#3a86ff] rounded-md opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-50 shadow-xl">
-                  🎯 Sniper de Prazos
-                </span>
+              <div className="bg-emerald-500/20 p-1.5 rounded-full flex-shrink-0">
+                <Target className="w-4 h-4 text-emerald-400" />
               </div>
-
-              {/* Badge 3: Zero Atrasos (ShieldCheck) */}
-              <div 
-                className={`w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 border ${isPremium ? 'border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.25)]' : 'border-emerald-500/20'} flex items-center justify-center text-emerald-400 cursor-help transition-all duration-300 hover:scale-110 hover:shadow-[0_0_12px_rgba(16,185,129,0.5)] relative group/tooltip`}
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-[#0a0c14] border border-white/10 text-[9px] font-bold text-emerald-400 rounded-md opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-50 shadow-xl">
-                  🛡️ Zero Atrasos
-                </span>
+              <div className="bg-orange-500/20 p-1.5 rounded-full flex-shrink-0">
+                <Flame className="w-4 h-4 text-orange-400" />
               </div>
             </div>
-          </div>
+          </Link>
           <button
             onClick={handleGenerateReport}
-            disabled={isGeneratingReport}
+            disabled={isGeneratingReport || pdfCooldown > 0}
             className="w-full sm:w-auto h-12 px-6 rounded-xl bg-gradient-to-r from-gray-800 to-gray-900 border border-[#3a86ff]/30 text-[#3a86ff] hover:bg-white/10 hover:border-[#3a86ff]/60 transition-all font-bold flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {isGeneratingReport ? (
@@ -345,7 +391,7 @@ export default function DashboardPage() {
             ) : (
               <Download className="w-5 h-5" />
             )}
-            {isGeneratingReport ? 'Gerando...' : 'Exportar Relatório PDF'}
+            {isGeneratingReport ? 'Gerando...' : pdfCooldown > 0 ? `Aguarde ${pdfCooldown}s...` : 'Exportar Relatório PDF'}
           </button>
           <button onClick={() => setIsSubjectModalOpen(true)} className="w-full sm:w-auto h-12 px-6 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 hover:border-white/30 transition-all font-medium flex items-center justify-center gap-2">
             <FolderOpen className="w-5 h-5 text-gray-400" />
@@ -361,6 +407,22 @@ export default function DashboardPage() {
           </button>
         </div>
       </header>
+
+      {/* Mobile Quick Access Shortcuts */}
+      <div className="flex md:hidden gap-3 mb-6">
+        <Link 
+          href="/dashboard/agenda"
+          className="flex-1 py-4 text-center font-bold bg-white/5 border border-white/10 rounded-2xl text-white hover:bg-white/10 active:scale-95 transition-transform"
+        >
+          📅 Ver Agenda
+        </Link>
+        <Link 
+          href="/dashboard/foco"
+          className="flex-1 py-4 text-center font-bold bg-white/5 border border-white/10 rounded-2xl text-white hover:bg-white/10 active:scale-95 transition-transform"
+        >
+          ⏱️ Modo Foco
+        </Link>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
         <div className="group relative bg-[#0a0c14]/80 backdrop-blur-xl border border-white/5 rounded-[2rem] p-8 overflow-hidden hover:border-[#3a86ff]/40 transition-all duration-300">
@@ -615,9 +677,22 @@ export default function DashboardPage() {
               </div>
             ) : (
               <form onSubmit={handleCreateTask} className="space-y-5">
-                <div>
+                <div className="relative">
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Título da Tarefa</label>
                   <input required type="text" value={newTask.title} onChange={(e) => setNewTask({ ...newTask, title: e.target.value })} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-indigo-500/80 focus:ring-1 focus:ring-indigo-500/80 outline-none transition-all placeholder:text-gray-700" placeholder="Ex: Lista de Exercícios 3" />
+                  
+                  <div className="absolute right-3 top-[36px]">
+                    {isPredicting && (
+                      <span className="text-[10px] text-purple-400 animate-pulse font-mono flex items-center gap-1 bg-[#0a0c14] px-1 rounded">
+                        <Loader2 className="animate-spin" size={10} /> calculando...
+                      </span>
+                    )}
+                    {aiEstimate && !isPredicting && (
+                      <span className="text-[10px] font-mono text-purple-300 bg-purple-900/30 px-2 py-0.5 rounded border border-purple-500/20 shadow-[0_0_10px_rgba(168,85,247,0.1)]">
+                        ✨ {aiEstimate}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Disciplina Vinculada</label>
@@ -632,6 +707,9 @@ export default function DashboardPage() {
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Data de Entrega (Opcional)</label>
                   <input
                     type="date"
+                    min="2026-01-01"
+                    max="2030-12-31"
+                    required
                     value={newTask.due_date}
                     onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
                     style={{ colorScheme: 'dark' }}

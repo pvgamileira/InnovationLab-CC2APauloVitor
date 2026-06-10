@@ -85,7 +85,7 @@ export default function AgendaPage() {
       if (!task.due_date) return;
 
       try {
-        const parsedDate = new Date(task.due_date);
+        const parsedDate = new Date(task.due_date + 'T12:00:00');
         // Verifica se a data é realmente válida antes de formatar
         if (isNaN(parsedDate.getTime())) return;
 
@@ -158,7 +158,7 @@ export default function AgendaPage() {
       </div>
 
       {/* Calendar Grid */}
-      <div className="bg-[#05070e]/80 backdrop-blur-xl border border-white/5 rounded-[2rem] overflow-hidden p-2 shadow-[0_0_50px_rgba(58,134,255,0.03)]">
+      <div className="bg-[#05070e]/80 backdrop-blur-xl border border-white/5 rounded-[2rem] overflow-x-auto overflow-y-hidden p-2 shadow-[0_0_50px_rgba(58,134,255,0.03)]">
 
         {/* Days of week header */}
         <div className="grid grid-cols-7 mb-2">

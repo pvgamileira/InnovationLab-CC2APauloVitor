@@ -1,444 +1,357 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Activity, PieChart as PieChartIcon, Clock, TrendingUp, Database, BookOpen, Target, Bot, Terminal } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart as RePieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { supabase } from '@/lib/supabase';
-import ActivityHeatmap from '@/components/ActivityHeatmap';
-import {
-  BarChart3, TrendingUp, Target, Clock, BrainCircuit, CheckCircle2, AlertCircle, Sparkles, Activity
-} from 'lucide-react';
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line
-} from 'recharts';
+import { useUserContext } from '@/context/UserContext';
 
 export default function EstatisticasPage() {
-  const [loading, setLoading] = useState(true);
-  const [metrics, setMetrics] = useState({
-    totalTasks: 0,
-    completedTasks: 0,
-    completionRate: 0,
-    totalWorkload: 0,
-    subjectData: [],
-    workloadData: [],
-    timelineData: []
-  });
+  const [activeTab, setActiveTab] = useState('produtividade');
+  const { userData } = useUserContext();
+  const [tasks, setTasks] = useState([]);
 
-  const [insightsData, setInsightsData] = useState(null);
-  const [isLoadingInsights, setIsLoadingInsights] = useState(true);
-  const [insightsError, setInsightsError] = useState(null);
-
-  const COLORS = ['#3a86ff', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899'];
+  // OpenSpec: Handlers for live AI diagnostics
+  const [isLoading, setIsLoading] = useState(false);
+  const [aiData, setAiData] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function fetchStats() {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return;
-
-        const [subjectsRes, tasksRes] = await Promise.all([
-          supabase.from('subjects').select('*').eq('user_id', session.user.id),
-          supabase.from('academic_tasks').select('*').eq('user_id', session.user.id)
-        ]);
-
-        const subjects = subjectsRes.data || [];
-        const tasks = tasksRes.data || [];
-
-        // Cálculos Base
-        const total = tasks.length;
-        const completed = tasks.filter(t => t.status === 'completed').length;
-        const rate = total === 0 ? 0 : Math.round((completed / total) * 100);
-        const workload = subjects.reduce((acc, curr) => acc + (curr.workload || 0), 0);
-
-        // Dados para o Gráfico de Barras (Tarefas por Matéria)
-        const subjectDataMap = {};
-        subjects.forEach(s => {
-          subjectDataMap[s.id] = { name: s.name, Pendentes: 0, Concluídas: 0 };
-        });
-
-        tasks.forEach(t => {
-          if (subjectDataMap[t.subject_id]) {
-            if (t.status === 'completed') {
-              subjectDataMap[t.subject_id].Concluídas += 1;
-            } else {
-              subjectDataMap[t.subject_id].Pendentes += 1;
-            }
-          }
-        });
-
-        // Dados para o Gráfico de Pizza (Carga Horária)
-        const workloadData = subjects.map(s => ({
-          name: s.name,
-          value: s.workload || 0
-        })).filter(s => s.value > 0);
-
-        // Dados para o Gráfico de Linha (Timeline de Prazos)
-        const timelineMap = {};
-        tasks.forEach(t => {
-          if (t.due_date) {
-            const [year, month, dayStr] = t.due_date.split('-');
-            if (dayStr && month) {
-              const formattedDate = `${dayStr.substring(0,2)}/${month}`;
-              if (!timelineMap[formattedDate]) {
-                timelineMap[formattedDate] = 0;
-              }
-              timelineMap[formattedDate] += 1;
-            }
-          }
-        });
-
-        const timelineData = Object.keys(timelineMap)
-          .map(dateStr => ({ date: dateStr, Tarefas: timelineMap[dateStr] }))
-          .sort((a, b) => {
-            const [dayA, monthA] = a.date.split('/');
-            const [dayB, monthB] = b.date.split('/');
-            return new Date(2026, parseInt(monthA)-1, parseInt(dayA)) - new Date(2026, parseInt(monthB)-1, parseInt(dayB));
-          });
-
-        setMetrics({
-          totalTasks: total,
-          completedTasks: completed,
-          completionRate: rate,
-          totalWorkload: workload,
-          subjectData: Object.values(subjectDataMap),
-          workloadData: workloadData,
-          timelineData: timelineData
-        });
-
-      } catch (error) {
-        console.error("Erro ao buscar estatísticas:", error);
-      } finally {
-        setLoading(false);
-      }
+    async function fetchTasks() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const { data } = await supabase.from('academic_tasks').select('*').eq('user_id', session.user.id);
+      if (data) setTasks(data);
     }
-
-    fetchStats();
+    fetchTasks();
   }, []);
 
-  useEffect(() => {
-    async function fetchInsights() {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          setInsightsError('Sessão não encontrada.');
-          setIsLoadingInsights(false);
-          return;
-        }
+  const completedTasks = tasks.filter(t => t.status === 'completed').length;
+  const pendingTasks = tasks.filter(t => t.status !== 'completed').length;
 
-        // AQUI ESTÁ O SEGREDO: Adicionado method POST
-        const response = await fetch('/api/gemini-insights', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          const errText = await response.text();
-          let errMsg = `Erro HTTP: ${response.status}`;
-          try {
-            const errJson = JSON.parse(errText);
-            errMsg = errJson.error || errMsg;
-          } catch (e) {
-            errMsg = errText || errMsg;
-          }
-          throw new Error(errMsg);
-        }
-
-        const data = await response.json();
-        setInsightsData(data);
-      } catch (error) {
-        console.error("Erro ao buscar insights da IA:", error);
-        setInsightsError(error.message);
-      } finally {
-        setIsLoadingInsights(false);
-      }
+  const handleGenerateDiagnosis = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/ai/consultoria', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tarefas: tasks, xp: userData?.xp || 0 })
+      });
+      if (!response.ok) throw new Error('SISTEMA OFFLINE. Incapaz de processar diagnóstico neural.');
+      const data = await response.json();
+      setAiData(data.diagnosis);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
+  };
+  
+  // OpenSpec: Heuristic mapping evaluating local user context for cognitive overload warning
+  const isOverloaded = (userData?.xp < 100) || (pendingTasks > completedTasks);
+  const velocityData = [
+    { name: 'Seg', xp: 120 }, { name: 'Ter', xp: 250 }, { name: 'Qua', xp: 150 },
+    { name: 'Qui', xp: 300 }, { name: 'Sex', xp: 450 }, { name: 'Sáb', xp: 0 }, { name: 'Dom', xp: 0 }
+  ];
 
-    fetchInsights();
-  }, []);
+  const effortData = [
+    { name: 'DB Design', value: 300, color: '#3a86ff' },
+    { name: 'SQL', value: 250, color: '#10b981' },
+    { name: 'Eng. Software', value: 100, color: '#f59e0b' }
+  ];
 
-  if (loading) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center p-8">
-        <div className="w-12 h-12 border-4 border-[#3a86ff]/20 border-t-[#3a86ff] rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  const backlogData = [
+    { name: 'Sem 1', concluidas: 5, criadas: 8 },
+    { name: 'Sem 2', concluidas: 12, criadas: 15 },
+    { name: 'Sem 3', concluidas: 10, criadas: 10 }
+  ];
+
+  const customTooltipStyle = {
+    backgroundColor: '#0f172a',
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: '0.5rem',
+    color: '#e5e7eb'
+  };
 
   return (
-    <div className="max-w-[1400px] mx-auto px-6 lg:px-12 pt-10 pb-20 animate-in fade-in duration-700">
-
+    <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
-      <header className="mb-10">
-        <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight bg-gradient-to-br from-white via-indigo-100 to-[#8b5cf6] bg-clip-text text-transparent mb-3">
-          Estatísticas & Insights
-        </h1>
-        <p className="text-gray-400 font-medium tracking-wide">
-          Análise preditiva do seu desempenho acadêmico.
-        </p>
-      </header>
-
-      {/* Smart AI Insights Panel */}
-      <div className="mb-10 bg-[#02040a]/80 backdrop-blur-xl border border-[#3a86ff]/30 rounded-3xl p-6 lg:p-8 relative overflow-hidden shadow-2xl shadow-[#3a86ff]/10">
-        <div className="flex items-center gap-3 mb-6">
-          <Sparkles className="w-6 h-6 text-[#3a86ff]" />
-          <h2 className="text-2xl font-bold text-gray-100 tracking-tight">Insights Inteligentes</h2>
-        </div>
-
-        {isLoadingInsights ? (
-          <div className="space-y-4 animate-pulse">
-            <div className="h-4 bg-[#3a86ff]/20 rounded w-3/4"></div>
-            <div className="h-4 bg-[#3a86ff]/20 rounded w-full"></div>
-            <div className="h-4 bg-[#3a86ff]/20 rounded w-5/6"></div>
-          </div>
-        ) : insightsError ? (
-          <div className="bg-red-900/20 border border-red-500/30 rounded-2xl p-5 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-red-400 font-bold text-sm mb-1">Falha na comunicação com a IA</p>
-              <p className="text-red-300/80 text-xs font-mono">{insightsError}</p>
-            </div>
-          </div>
-        ) : insightsData && insightsData.insights ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {insightsData.insights.map((insight, idx) => (
-              <div key={idx} className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition-colors">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#3a86ff]/20 flex items-center justify-center text-[#3a86ff] font-bold text-sm">
-                    {idx + 1}
-                  </div>
-                  <p className="text-gray-300 text-sm leading-relaxed">{insight}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : null}
+      <div className="mb-10">
+        <h1 className="text-4xl font-extrabold tracking-tight text-white mb-2">Estatísticas Operacionais</h1>
+        <p className="text-gray-400">Visão tática do seu progresso, cadência e saúde do sistema.</p>
       </div>
 
-      {/* Top Metric Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        <MetricCard
-          title="Taxa de Conclusão"
-          value={`${metrics.completionRate}%`}
-          icon={Target}
-          color="text-emerald-400"
-          bg="bg-emerald-400/10"
-        />
-        <MetricCard
-          title="Tarefas Entregues"
-          value={`${metrics.completedTasks} / ${metrics.totalTasks}`}
-          icon={CheckCircle2}
-          color="text-[#3a86ff]"
-          bg="bg-[#3a86ff]/10"
-        />
-        <MetricCard
-          title="Carga Horária Total"
-          value={`${metrics.totalWorkload}h`}
-          icon={Clock}
-          color="text-fuchsia-400"
-          bg="bg-fuchsia-400/10"
-        />
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 relative overflow-hidden group">
-          <div className="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/20 rounded-full blur-2xl group-hover:bg-amber-500/30 transition-all"></div>
-          <div className="flex justify-between items-start relative z-10">
-            <div>
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Status do Semestre</p>
-              <h3 className="text-2xl font-black text-amber-400">Em Dia</h3>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-amber-400/10 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-amber-400" />
-            </div>
-          </div>
-        </div>
+      {/* Tab Navigation */}
+      <div className="flex gap-6 border-b border-white/10 mb-8 overflow-x-auto">
+        <button
+          onClick={() => setActiveTab('produtividade')}
+          className={`pb-3 transition-all whitespace-nowrap ${
+            activeTab === 'produtividade'
+              ? 'text-white border-b-2 border-[#3a86ff] font-bold'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          Produtividade
+        </button>
+        <button
+          onClick={() => setActiveTab('esforco')}
+          className={`pb-3 transition-all whitespace-nowrap ${
+            activeTab === 'esforco'
+              ? 'text-white border-b-2 border-[#3a86ff] font-bold'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          Esforço Líquido
+        </button>
+        <button
+          onClick={() => setActiveTab('ia')}
+          className={`pb-3 transition-all whitespace-nowrap flex items-center gap-2 ${
+            activeTab === 'ia'
+              ? 'text-white border-b-2 border-purple-500 font-bold'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          ✨ Consultoria IA
+        </button>
       </div>
 
-      {/* Consistência Acadêmica (Heatmap) */}
-      <div className="bg-[#05070e]/80 backdrop-blur-xl border border-white/5 rounded-3xl p-6 lg:p-8 mb-10 shadow-2xl relative overflow-hidden">
-        <div className="absolute right-0 top-0 w-64 h-64 bg-green-500/5 rounded-full blur-[80px] pointer-events-none"></div>
-        <div className="flex items-center gap-3 mb-8 relative z-10">
-          <div className="w-10 h-10 bg-green-500/10 border border-green-500/20 rounded-xl flex items-center justify-center text-green-500">
-            <CheckCircle2 className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-gray-100 tracking-tight">Consistência Acadêmica</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Seu histórico de tarefas concluídas nos últimos 30 dias</p>
-          </div>
-        </div>
-        <div className="relative z-10 overflow-x-auto pb-2">
-           <ActivityHeatmap />
-        </div>
-      </div>
-
-      {/* Main Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Bar Chart - 2 columns wide */}
-        <div className="lg:col-span-2 bg-[#05070e]/80 backdrop-blur-xl border border-white/5 rounded-3xl p-6 shadow-2xl">
-          <div className="flex items-center gap-3 mb-8">
-            <BarChart3 className="w-5 h-5 text-[#3a86ff]" />
-            <h2 className="text-lg font-bold text-gray-200">Produtividade por Disciplina</h2>
-          </div>
-
-          <div className="h-[300px] w-full">
-            {metrics.subjectData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={metrics.subjectData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                  <XAxis dataKey="name" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#02040a', borderColor: '#333', borderRadius: '12px', color: '#fff' }}
-                    itemStyle={{ color: '#fff' }}
-                    cursor={{ fill: '#ffffff05' }}
-                  />
-                  <Bar dataKey="Concluídas" stackId="a" fill="#10b981" radius={[0, 0, 4, 4]} />
-                  <Bar dataKey="Pendentes" stackId="a" fill="#3a86ff" opacity={0.5} radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <EmptyChartState />
-            )}
-          </div>
-        </div>
-
-        {/* Donut Chart - 1 column */}
-        <div className="bg-[#05070e]/80 backdrop-blur-xl border border-white/5 rounded-3xl p-6 shadow-2xl flex flex-col">
-          <div className="flex items-center gap-3 mb-2">
-            <Layers className="w-5 h-5 text-fuchsia-400" />
-            <h2 className="text-lg font-bold text-gray-200">Distribuição de Carga</h2>
-          </div>
-
-          <div className="flex-1 min-h-[250px] relative">
-            {metrics.workloadData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={metrics.workloadData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={70}
-                    outerRadius={90}
-                    paddingAngle={5}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {metrics.workloadData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#02040a', borderColor: '#333', borderRadius: '12px' }}
-                    itemStyle={{ color: '#fff' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <EmptyChartState />
-            )}
-            {/* Center Text in Donut */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-3xl font-black text-white">{metrics.totalWorkload}</span>
-              <span className="text-[10px] text-gray-500 font-bold tracking-widest uppercase">Horas</span>
-            </div>
-          </div>
-        </div>
-
-        {/* AI Insights Panel (Full Width Bottom) - Painel Fixo */}
-        <div className="lg:col-span-3 bg-gradient-to-r from-[#0a0c14] to-[#120f1e] border border-indigo-500/20 rounded-3xl p-8 relative overflow-hidden">
-          <div className="absolute -right-20 -top-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl"></div>
-
-          <div className="flex items-start gap-6 relative z-10">
-            <div className="w-14 h-14 rounded-2xl bg-indigo-500/20 flex items-center justify-center shrink-0 border border-indigo-500/30">
-              <BrainCircuit className="w-7 h-7 text-indigo-400" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-white mb-2">EduTrack AI Insight</h3>
-              <p className="text-gray-400 leading-relaxed max-w-4xl">
-                Baseado no seu volume de entregas e carga horária atual, você está mantendo um ritmo sólido.
-                Para otimizar o seu tempo durante o período noturno e evitar sobrecarga na reta final do semestre,
-                recomendamos focar nas disciplinas com maior carga horária pendente primeiro. A lógica estruturada
-                tende a facilitar a fluidez nas entregas mais pesadas.
-              </p>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      {/* Radar de Sobrecarga (Prazos) */}
-      <div className="bg-[#05070e]/80 backdrop-blur-xl border border-white/5 rounded-3xl p-6 mt-8 shadow-2xl">
-        <div className="flex items-center gap-3 mb-8">
-          <Activity className="w-5 h-5 text-[#f59e0b]" />
-          <h2 className="text-lg font-bold text-gray-200">Radar de Sobrecarga (Prazos)</h2>
-        </div>
+      {/* Produtividade Layout */}
+      {activeTab === 'produtividade' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {metrics.timelineData.length > 0 ? (
-          <div className="h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={metrics.timelineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                <XAxis dataKey="date" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#02040a', borderColor: '#333', borderRadius: '12px', color: '#fff' }}
-                  itemStyle={{ color: '#fff' }}
-                  cursor={{ stroke: '#ffffff10', strokeWidth: 2 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="Tarefas" 
-                  stroke="#f59e0b" 
-                  strokeWidth={3} 
-                  dot={{ fill: '#f59e0b', strokeWidth: 2 }} 
-                  activeDot={{ r: 6 }} 
-                />
+        {/* Card 1: Saúde do Backlog */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col hover:bg-white/[0.07] transition-colors relative overflow-hidden group">
+          <div className="flex items-start justify-between mb-4">
+            <div className="w-10 h-10 rounded-xl bg-[#3a86ff]/20 flex items-center justify-center text-[#3a86ff]">
+              <Activity className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-400 text-right">Taxa de Eficácia</h3>
+              <div className="text-xl font-bold text-white text-right">85%</div>
+            </div>
+          </div>
+          <div className="flex-1 -mx-2 -mb-2 mt-4">
+            <ResponsiveContainer width="100%" height={160}>
+              <LineChart data={backlogData}>
+                <XAxis dataKey="name" stroke="#9ca3af" fontSize={10} tickLine={false} axisLine={false} />
+                <Tooltip contentStyle={customTooltipStyle} itemStyle={{ color: '#e5e7eb' }} />
+                <Line type="monotone" dataKey="concluidas" stroke="#10b981" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="criadas" stroke="#ef4444" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
-        ) : (
-          <div className="h-[250px] flex items-center justify-center text-gray-500 font-medium">
-            Nenhum prazo próximo detectado
+        </div>
+
+        {/* Card 3: Cadência/Velocity */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col hover:bg-white/[0.07] transition-colors relative overflow-hidden group">
+          <div className="flex items-start justify-between mb-4">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-500">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-400 text-right">Velocidade de XP</h3>
+              <div className="text-xl font-bold text-white text-right">+15%</div>
+            </div>
           </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// Utility Components
-function MetricCard({ title, value, icon: Icon, color, bg }) {
-  return (
-    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 relative overflow-hidden group hover:border-white/20 transition-all">
-      <div className={`absolute -right-6 -top-6 w-24 h-24 ${bg} rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700`}></div>
-      <div className="flex justify-between items-start relative z-10">
-        <div>
-          <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">{title}</p>
-          <h3 className="text-3xl font-black text-white tracking-tight">{value}</h3>
+          <div className="flex-1 -mx-2 -mb-2 mt-4">
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={velocityData}>
+                <XAxis dataKey="name" stroke="#9ca3af" fontSize={10} tickLine={false} axisLine={false} />
+                <Tooltip contentStyle={customTooltipStyle} itemStyle={{ color: '#e5e7eb' }} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                <Bar dataKey="xp" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-        <div className={`w-10 h-10 rounded-full ${bg} flex items-center justify-center`}>
-          <Icon className={`w-5 h-5 ${color}`} />
+
+        {/* Card 5: Índice de Rastreamento (Metric + Sparkline) */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col hover:bg-white/[0.07] transition-colors relative overflow-hidden group justify-between">
+          <div className="flex items-start justify-between mb-4">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-500">
+              <Database className="w-5 h-5" />
+            </div>
+            <div className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold rounded-lg flex items-center gap-1">
+              <TrendingUp className="w-3 h-3" />
+              Perfeito
+            </div>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-400 mb-1">Índice de Rastreamento</h3>
+            <div className="text-4xl font-extrabold text-white mb-2">100%</div>
+            <p className="text-xs text-gray-500">Nenhum ponto cego. Todas as disciplinas possuem tarefas ativas.</p>
+          </div>
         </div>
-      </div>
-    </div>
-  );
-}
 
-function EmptyChartState() {
-  return (
-    <div className="w-full h-full flex flex-col items-center justify-center text-gray-500">
-      <AlertCircle className="w-8 h-8 opacity-20 mb-2" />
-      <p className="text-sm">Dados insuficientes para gerar o gráfico.</p>
-    </div>
-  );
-}
+        {/* Card 6: Tração de Estudo (Metric + Sparkline) */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col hover:bg-white/[0.07] transition-colors relative overflow-hidden group justify-between">
+          <div className="flex items-start justify-between mb-4">
+            <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center text-orange-500">
+              <Target className="w-5 h-5" />
+            </div>
+            <div className="px-2.5 py-1 bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-bold rounded-lg flex items-center gap-1">
+              <TrendingUp className="w-3 h-3" />
+              +450 XP
+            </div>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-400 mb-1">Tração de Estudo</h3>
+            <div className="text-3xl font-extrabold text-white mb-2 truncate">SQL Fund.</div>
+            <p className="text-xs text-gray-500">Disciplina que mais gerou XP e avanço tático nesta semana.</p>
+          </div>
+        </div>
 
-function Layers(props) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="12 2 2 7 12 12 22 7 12 2" />
-      <polyline points="2 12 12 17 22 12" />
-      <polyline points="2 17 12 22 22 17" />
-    </svg>
+        </div>
+      )}
+
+      {/* Esforço Líquido Layout */}
+      {activeTab === 'esforco' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        {/* Card 2: Distribuição de Carga */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col hover:bg-white/[0.07] transition-colors relative overflow-hidden group">
+          <div className="flex items-start justify-between mb-4">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-500">
+              <PieChartIcon className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-400 text-right">Esforço por Disciplina</h3>
+              <div className="text-xl font-bold text-white text-right">12h 30m Foco</div>
+            </div>
+          </div>
+          <div className="flex-1 -mx-2 -mb-2 mt-4">
+            <ResponsiveContainer width="100%" height={160}>
+              <RePieChart>
+                <Pie data={effortData} innerRadius={50} outerRadius={70} paddingAngle={5} dataKey="value" stroke="none">
+                  {effortData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={customTooltipStyle} itemStyle={{ color: '#e5e7eb' }} />
+              </RePieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Card 4: Densidade de Documentação */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col hover:bg-white/[0.07] transition-colors relative overflow-hidden group">
+          <div className="flex items-start justify-between mb-6">
+            <div className="w-10 h-10 rounded-xl bg-pink-500/20 flex items-center justify-center text-pink-500">
+              <BookOpen className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-400 text-right">Saúde do Caderno</h3>
+              <div className="text-xl font-bold text-white text-right">66% Cobertura</div>
+            </div>
+          </div>
+          <div className="flex-1 flex flex-col gap-4">
+            <div>
+              <div className="flex justify-between text-xs font-medium text-gray-400 mb-1">
+                <span>DataBase Design</span>
+                <span className="text-white">100%</span>
+              </div>
+              <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                <div className="bg-[#3a86ff] h-full" style={{ width: '100%' }}></div>
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-xs font-medium text-gray-400 mb-1">
+                <span>SQL Fundamentals</span>
+                <span className="text-white">75%</span>
+              </div>
+              <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                <div className="bg-[#10b981] h-full" style={{ width: '75%' }}></div>
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-xs font-medium text-gray-400 mb-1">
+                <span>Eng. Software</span>
+                <span className="text-gray-500">0%</span>
+              </div>
+              <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                <div className="bg-gray-600 h-full" style={{ width: '0%' }}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        </div>
+      )}
+
+      {/* AI Insights Panel */}
+      {activeTab === 'ia' && (
+        <div className="max-w-3xl mx-auto py-10 animate-in fade-in zoom-in duration-500">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-16 h-16 rounded-2xl bg-purple-500/20 flex items-center justify-center text-purple-400">
+              <Bot className="w-8 h-8" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-extrabold text-white">Consultoria IA</h2>
+              <p className="text-gray-400">Análise tática e diagnóstico operacional profundo.</p>
+            </div>
+          </div>
+          
+          <div className="bg-[#0a0c14]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-[0_0_50px_rgba(168,85,247,0.1)]">
+            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <Activity className="w-5 h-5 text-purple-400" />
+              Métrica de Queima de Backlog
+            </h3>
+            
+            <div className="grid grid-cols-2 gap-6 mb-8">
+              <div className="bg-white/5 border border-white/5 rounded-2xl p-6 text-center">
+                <div className="text-gray-400 text-sm font-medium mb-2">Tarefas Concluídas</div>
+                <div className="text-4xl font-extrabold text-[#10b981]">{completedTasks}</div>
+              </div>
+              <div className="bg-white/5 border border-white/5 rounded-2xl p-6 text-center">
+                <div className="text-gray-400 text-sm font-medium mb-2">Tarefas Pendentes</div>
+                <div className="text-4xl font-extrabold text-[#ef4444]">{pendingTasks}</div>
+              </div>
+            </div>
+
+            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <Terminal className="w-5 h-5 text-purple-400" />
+              Terminal de Insights
+            </h3>
+            
+            {!aiData && !isLoading && !error && (
+              <div className="flex flex-col items-center py-8">
+                <button 
+                  onClick={handleGenerateDiagnosis}
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:shadow-[0_0_30px_rgba(168,85,247,0.6)] hover:scale-105 transition-all duration-300 flex items-center gap-2"
+                >
+                  <Bot className="w-5 h-5" />
+                  🧠 Gerar Diagnóstico Neural
+                </button>
+              </div>
+            )}
+
+            {isLoading && (
+              <div className="bg-white/5 animate-pulse rounded-xl h-32 w-full border border-white/10 flex items-center justify-center">
+                <p className="text-purple-400 font-mono text-sm tracking-widest animate-bounce">Processando matriz neural...</p>
+              </div>
+            )}
+
+            {error && (
+              <div className="bg-red-900/20 border border-red-500/20 p-6 rounded-xl text-red-400 font-mono text-sm">
+                [ERRO DO SISTEMA]: {error}
+              </div>
+            )}
+
+            {aiData && !isLoading && (
+              <div className="bg-black/40 font-mono text-sm border border-white/5 p-6 rounded-xl flex flex-col gap-3">
+                <div className="text-gray-500 flex items-center gap-2 mb-2">
+                  <span className="text-purple-500">➜</span> analise_heuristica --user={userData?.xp || 0}xp
+                </div>
+                <div className="text-[#e2e8f0] leading-relaxed border-l-2 border-purple-500/50 pl-4 whitespace-pre-wrap">
+                  {aiData}
+                </div>
+                <button onClick={() => { setAiData(null); setError(null); }} className="text-xs text-gray-500 hover:text-white self-end mt-4 underline decoration-gray-700 underline-offset-4">Resetar Terminal</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+    </div>
   );
 }

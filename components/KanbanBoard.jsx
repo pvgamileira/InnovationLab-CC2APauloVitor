@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { supabase } from '@/lib/supabase';
 import {
@@ -167,12 +167,28 @@ function KanbanColumn({ column, tasks, colIndex, moveTask }) {
 }
 
 import { useToast } from '@/context/ToastContext';
+import { useUserContext } from '@/context/UserContext';
 
 export default function KanbanBoard({ tasks = [], moveTask }) {
   const { showToast } = useToast();
+  const { refreshUserData } = useUserContext();
+  const hasToastedRef = useRef(false);
+
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
 
   const grouped = STATUS_ORDER.reduce((acc, key) => {
-    acc[key] = tasks.filter(t => (t.status === key) || (key === 'pending' && !STATUS_ORDER.includes(t.status)));
+    acc[key] = tasks.filter(t => {
+      const belongs = (t.status === key) || (key === 'pending' && !STATUS_ORDER.includes(t.status));
+      if (!belongs) return false;
+
+      if (key === 'completed' && t.due_date) {
+        const dueDate = new Date(t.due_date);
+        dueDate.setHours(0, 0, 0, 0);
+        if (dueDate < now) return false;
+      }
+      return true;
+    });
     return acc;
   }, {});
 
@@ -202,10 +218,31 @@ export default function KanbanBoard({ tasks = [], moveTask }) {
             data: { xp: newXP, level: newLevel }
           });
           
+          await refreshUserData();
+          
           showToast("🎉 Você ganhou +50 XP!", "success");
         }
       } catch (err) {
-        console.error("Erro ao atualizar XP:", err);
+        showToast(`Erro: ${err.message || "Falha ao atualizar XP"}`, "error");
+      }
+    }
+
+    if (wasAlreadyCompleted && finalStatus !== 'completed') {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const currentXP = user.user_metadata?.xp || 0;
+          const newXP = Math.max(0, currentXP - 50);
+          const newLevel = Math.floor(newXP / 500) + 1;
+          
+          await supabase.auth.updateUser({
+            data: { xp: newXP, level: newLevel }
+          });
+          
+          await refreshUserData();
+        }
+      } catch (err) {
+        showToast(`Erro: ${err.message || "Falha ao atualizar XP"}`, "error");
       }
     }
   };
@@ -232,9 +269,17 @@ export default function KanbanBoard({ tasks = [], moveTask }) {
     });
 
     if (overdueTasks.length > 0) {
-      showToast(`⚠️ Você tem ${overdueTasks.length} tarefa(s) atrasada(s)!`, "error");
+      if (!hasToastedRef.current) {
+        showToast(`⚠️ Você tem ${overdueTasks.length} tarefa(s) atrasada(s)!`, "error");
+        hasToastedRef.current = true;
+      }
     } else if (upcomingTasks.length > 0) {
-      showToast(`⏰ Atenção! ${upcomingTasks.length} tarefa(s) vencem em menos de 24h.`, "error");
+      if (!hasToastedRef.current) {
+        showToast(`⏰ Atenção! ${upcomingTasks.length} tarefa(s) vencem em menos de 24h.`, "error");
+        hasToastedRef.current = true;
+      }
+    } else {
+      hasToastedRef.current = false;
     }
   }, [tasks]); // Only run when tasks change (first load or new data)
 

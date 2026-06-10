@@ -4,12 +4,24 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
     User, Briefcase, GraduationCap, Shield,
-    Trophy, Target, Zap, BookOpen, Edit3, X, Loader2, Download, Clock
+    Trophy, Target, Zap, BookOpen, Edit3, X, Loader2, Download, Clock,
+    Moon, Flame, TrendingUp, Lock
 } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
+import { useUserContext } from '@/context/UserContext';
+
+const BADGES_LIST = [
+    { id: 1, name: "Mago da Madrugada", desc: "Completou uma tarefa entre 00:00 e 04:00.", icon: "Moon", unlocked: true, color: "text-purple-400", bg: "bg-purple-500/20", border: "border-purple-500/30" },
+    { id: 2, name: "Speedrunner", desc: "Concluiu uma tarefa em tempo recorde.", icon: "Zap", unlocked: false, color: "text-yellow-400", bg: "bg-yellow-500/20", border: "border-yellow-500/30" },
+    { id: 3, name: "Cauma", desc: "Terminou um ciclo de foco sem pausar.", icon: "Target", unlocked: true, color: "text-emerald-400", bg: "bg-emerald-500/20", border: "border-emerald-500/30" },
+    { id: 4, name: "Calma Calabreso", desc: "Esbarrou no limite do plano Free.", icon: "Flame", unlocked: true, color: "text-orange-400", bg: "bg-orange-500/20", border: "border-orange-500/30" },
+    { id: 5, name: "Mais de 8 mil!", desc: "Atingiu a marca de 9000 XP.", icon: "TrendingUp", unlocked: false, color: "text-red-500", bg: "bg-red-500/20", border: "border-red-500/30" }
+];
 
 export default function PerfilPage() {
     const { showToast } = useToast();
+    const { userData } = useUserContext();
+    const { xp, level } = userData;
     const [loading, setLoading] = useState(true);
     const [session, setSession] = useState(null);
     const [isExporting, setIsExporting] = useState(false);
@@ -35,6 +47,7 @@ export default function PerfilPage() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editForm, setEditForm] = useState(profileMeta);
     const [isSaving, setIsSaving] = useState(false);
+    const [activeTab, setActiveTab] = useState('geral');
 
     useEffect(() => {
         fetchProfileData();
@@ -71,16 +84,10 @@ export default function PerfilPage() {
             const tasks = tasksRes.data || [];
 
             const completed = tasks.filter(t => t.status === 'completed').length;
-            const calculatedXp = completed * 50;
-            const calculatedLevel = Math.floor(calculatedXp / 500) + 1;
-            const nextXp = calculatedLevel * 500;
 
             setStats(prev => ({
                 ...prev,
-                tasksCompleted: completed,
-                xp: calculatedXp,
-                level: calculatedLevel,
-                nextLevelXp: nextXp
+                tasksCompleted: completed
             }));
 
             const masteryData = subjects.map(sub => {
@@ -161,7 +168,8 @@ export default function PerfilPage() {
 
     if (loading) return <div className="flex h-full items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-[#3a86ff]" /></div>;
 
-    const xpPercentage = Math.min(100, Math.round((stats.xp / stats.nextLevelXp) * 100));
+    const nextLevelXp = level * 500;
+    const xpPercentage = Math.min(100, Math.round((xp / nextLevelXp) * 100));
 
     return (
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 pt-10 pb-20 animate-in fade-in duration-700">
@@ -191,6 +199,22 @@ export default function PerfilPage() {
                 </div>
             </header>
 
+            <div className="flex gap-6 border-b border-white/10 mb-6">
+                <button
+                    onClick={() => setActiveTab('geral')}
+                    className={activeTab === 'geral' ? 'text-white border-b-2 border-[#3a86ff] pb-3 font-bold transition-all' : 'text-gray-400 hover:text-gray-200 pb-3 font-medium transition-all'}
+                >
+                    Visão Geral
+                </button>
+                <button
+                    onClick={() => setActiveTab('conquistas')}
+                    className={activeTab === 'conquistas' ? 'text-white border-b-2 border-[#3a86ff] pb-3 font-bold transition-all' : 'text-gray-400 hover:text-gray-200 pb-3 font-medium transition-all'}
+                >
+                    Conquistas
+                </button>
+            </div>
+
+            {activeTab === 'geral' && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="space-y-8">
                     <div className="bg-[#05070e]/80 backdrop-blur-xl border border-white/5 rounded-[2rem] p-8 text-center relative overflow-hidden shadow-2xl">
@@ -211,8 +235,8 @@ export default function PerfilPage() {
 
                     <div className="bg-[#05070e]/80 backdrop-blur-xl border border-indigo-500/10 rounded-[2rem] p-8 shadow-2xl relative overflow-hidden">
                         <div className="flex justify-between items-end mb-4">
-                            <div><p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Nível</p><h3 className="text-4xl font-black text-white">{stats.level}</h3></div>
-                            <div className="text-right"><p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-1">XP</p><p className="text-sm font-medium text-gray-400">{stats.xp} / {stats.nextLevelXp}</p></div>
+                            <div><p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Nível</p><h3 className="text-4xl font-black text-white">{level}</h3></div>
+                            <div className="text-right"><p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-1">XP</p><p className="text-sm font-medium text-gray-400">{xp} / {nextLevelXp}</p></div>
                         </div>
                         <div className="w-full h-3 bg-black/50 rounded-full overflow-hidden border border-white/5">
                             <div className="h-full bg-gradient-to-r from-[#3a86ff] to-indigo-500 rounded-full" style={{ width: `${xpPercentage}%` }}></div>
@@ -223,7 +247,7 @@ export default function PerfilPage() {
                 <div className="lg:col-span-2 space-y-8">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-6 flex flex-col items-center justify-center text-center"><Target className="w-8 h-8 text-emerald-400 mb-3" /><h4 className="text-4xl font-black text-white mb-1">{stats.tasksCompleted}</h4><p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Entregas</p></div>
-                        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-6 flex flex-col items-center justify-center text-center"><Trophy className="w-8 h-8 text-amber-400 mb-3" /><h4 className="text-4xl font-black text-white mb-1">{stats.level * 50}</h4><p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Capacidade Est.</p></div>
+                        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-6 flex flex-col items-center justify-center text-center"><Trophy className="w-8 h-8 text-amber-400 mb-3" /><h4 className="text-4xl font-black text-white mb-1">{level * 50}</h4><p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Capacidade Est.</p></div>
                     </div>
 
                     <div className="bg-[#05070e]/80 backdrop-blur-xl border border-white/5 rounded-[2rem] p-8 shadow-2xl">
@@ -241,6 +265,41 @@ export default function PerfilPage() {
                     </div>
                 </div>
             </div>
+            )}
+
+            {/* Badges Section */}
+            {activeTab === 'conquistas' && (
+            <>
+                <h3 className="text-2xl font-bold mt-10 mb-6 text-white">Minhas Conquistas</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {BADGES_LIST.map(badge => {
+                        let IconComponent = Target;
+                        if (badge.icon === 'Moon') IconComponent = Moon;
+                        if (badge.icon === 'Zap') IconComponent = Zap;
+                        if (badge.icon === 'Flame') IconComponent = Flame;
+                        if (badge.icon === 'TrendingUp') IconComponent = TrendingUp;
+
+                        return (
+                            <div 
+                                key={badge.id} 
+                                className={`relative p-5 rounded-3xl border flex flex-col items-center justify-center text-center transition-all ${badge.unlocked ? `border-white/10 ${badge.border} ${badge.bg}` : 'grayscale opacity-50 bg-white/5 border-white/10'}`}
+                            >
+                                {!badge.unlocked && (
+                                    <div className="absolute top-3 right-3 text-gray-500">
+                                        <Lock className="w-4 h-4" />
+                                    </div>
+                                )}
+                                <div className={`w-12 h-12 rounded-full mb-3 flex items-center justify-center bg-black/30 border ${badge.unlocked ? badge.border : 'border-white/10'}`}>
+                                    <IconComponent className={`w-6 h-6 ${badge.unlocked ? badge.color : 'text-gray-400'}`} />
+                                </div>
+                                <h4 className="text-sm font-bold text-white mb-1">{badge.name}</h4>
+                                <p className="text-xs text-gray-400 leading-tight">{badge.desc}</p>
+                            </div>
+                        );
+                    })}
+                </div>
+            </>
+            )}
 
             {isEditModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

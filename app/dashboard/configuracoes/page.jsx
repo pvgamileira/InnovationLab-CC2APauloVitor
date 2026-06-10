@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import {
     Lock, Trash2, HelpCircle, AlertTriangle, X, Loader2, ShieldCheck
@@ -8,6 +9,7 @@ import {
 import { useToast } from '@/context/ToastContext';
 
 export default function ConfiguracoesPage() {
+    const router = useRouter();
     const { showToast } = useToast();
     const [session, setSession] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -204,7 +206,7 @@ export default function ConfiguracoesPage() {
                             </div>
                         </div>
                         <button
-                            onClick={() => showToast("O suporte será aberto em uma nova aba na versão final.", "success")}
+                            onClick={() => router.push('/dashboard/suporte')}
                             className="w-full py-4 bg-[#3a86ff] text-white rounded-xl font-bold text-sm shadow-[0_0_20px_rgba(58,134,255,0.3)] hover:bg-[#2563eb] transition-all relative z-10"
                         >
                             Abrir Chamado de Suporte
