@@ -12,7 +12,7 @@ O **EduTrack AI** é uma plataforma de gerenciamento acadêmico e mentoria intel
 2. **Mentoria por Inteligência Artificial (IA):** Integração profunda com o modelo de linguagem Gemini AI para predição de estresse, quebra automática de tarefas complexas e feedbacks personalizados.
 3. **Engajamento Gamificado:** Mecânica de RPG (Role-Playing Game) baseada em pontos de experiência (XP), níveis e heatmaps de atividade que transformam o progresso acadêmico em uma experiência interativa e motivadora.
 
-O projeto é voltado para apresentações acadêmicas e profissionais (Innovation Lab / Trabalho de Conclusão de Curso), atendendo a rígidos critérios de arquitetura e conformidade legal com a LGPD.
+O projeto é voltado para apresentações acadêmicas e profissionais (Innovation Lab / Trabalho de Conclusão de Curso), atendendo a rígidos critérios de arquitetura e conformidade legal com a LGPD. Foi construído integralmente sob a **Metodologia Open-Spec**, rejeitando práticas não estruturadas ("vibe coding") em favor de especificações declarativas que garantem uma base de código rastreável e à prova de falhas (*crash-proof*).
 
 ---
 
@@ -37,8 +37,9 @@ graph TD
   - **Paleta de Cores:** Fundo principal em **Rich Black** (`#02040a`), acentos primários e botões em **Metallic Blue** (`#3a86ff`).
   - **Efeitos Visuais:** Efeito translúcido de *Glassmorphism* (`backdrop-blur-xl`, fundos `bg-white/5` ou `bg-black/60` com bordas sutis `border-white/5` ou `border-white/10`).
   - **Tipografia:** Uso de fontes modernas do Google Fonts (ex: Inter / Outfit).
-  - **Animações:** Transições fluidas de entrada e interações de hover utilizando a biblioteca `framer-motion`.
+  - **Animações (Anti-Crash UI):** Transições fluidas de entrada e interações de hover utilizando `framer-motion`. A Landing Page incorpora um *Particle Background* em **Vanilla JS Canvas**, entregando profundidade 3D (paralaxe) sem o peso de *pipelines* WebGL complexos, mantendo 60fps estáveis.
   - **Ícones:** Puramente baseados em vetores dinâmicos utilizando `lucide-react` para garantir a qualidade estética premium em todos os sistemas operacionais, banindo emojis nativos.
+  - **Estabilidade de Estado:** Implementação de padrões rigorosos, como o uso de *guard flags* com `useRef` no Kanban para prevenir loops infinitos de re-renderização em `useEffect`, e limpeza da árvore de renderização (UI Otimista) ao retrair modais imediatamente após operações de exclusão.
 
 ### 2.2. Backend & Banco de Dados (Supabase + PostgreSQL)
 - **Persistência de Dados:** Banco de dados relacional PostgreSQL hospedado de forma serveless no Supabase.
@@ -61,10 +62,11 @@ graph TD
 - **Modais de CRUD Rápidos:** Adição e edição instantânea de disciplinas e tarefas com estados de validação nativos no React.
 
 ### 3.2. Inteligência Artificial (AI Mentor & Insights)
-O EduTrack AI utiliza o **Gemini AI** integrado a rotas de API seguras (`/api/gemini/insights` e `/api/gemini/task-breaker`) para fornecer recursos inteligentes e contextualizados:
-- **Smart AI Insights Panel:** Painel que analisa as tarefas pendentes, prazos acumulados, carga horária e turno do aluno para emitir recomendações proativas.
-- **Quebrador Inteligente de Tarefas (AI Task Breaker):** Divide tarefas acadêmicas complexas (ex: "Escrever artigo de conclusão") em subetapas menores e gerenciáveis com prazos sugeridos pelo modelo.
-- **Predição e Insights de Burnout:** Alerta preventivo se o volume de tarefas com prioridade alta em datas próximas indicar risco elevado de estresse e sobrecarga cognitiva.
+O EduTrack AI utiliza o **Gemini AI** integrado a rotas de API seguras no backend, desenhadas com foco em altíssima resiliência:
+- **Contrato REST Nativo:** Para evitar instabilidades de *build* causadas por SDKs pesados de IA, a comunicação com o Gemini é feita via `fetch` nativo do Node.js/Next.js, apontando diretamente para o endpoint oficial `gemini-3.5-flash`.
+- **Smart AI Insights Panel (Consultoria IA):** Painel heurístico (estilo Terminal) que analisa dados dinâmicos globais (XP e Backlog de tarefas) enviando-os ao modelo para obter diagnósticos táticos sobre a carga cognitiva do estudante.
+- **Quebrador Inteligente de Tarefas (AI Task Breaker):** Divide tarefas acadêmicas complexas em subetapas menores e gerenciáveis com prazos sugeridos pelo modelo.
+- **Predição e Fallback Silencioso:** Caso a API de IA fique indisponível (ex: falhas de rede), as rotas possuem tratamento rigoroso (`try/catch`) que retorna um estado visual de *fallback* elegante (ex: "SISTEMA OFFLINE"), garantindo que a aplicação nunca quebre no frontend.
 
 ### 3.3. Gamificação Avançada e Produtividade RPG
 - **XP HUD & Header:** Exibição do progresso de experiência (XP) no cabeçalho do dashboard com uma barra de progresso neon brilhante de cor azul metálico. O nível é calculado pela fórmula dinâmica: `Nível = floor(TarefasConcluídas / 5) + 1`.

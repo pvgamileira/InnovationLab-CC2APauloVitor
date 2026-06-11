@@ -1,0 +1,3 @@
+name: generate-architecture-readme
+description: Scan Workspace and Generate Architecture README.md based on OpenSpec
+status: proposed
